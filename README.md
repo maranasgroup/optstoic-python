@@ -25,10 +25,16 @@ Note: Commercial solvers are more robust than open source solvers.
 
 
 ##Current project dependencies:
-1. pulp (Optional if you are only using this for pathway drawing)
-```pip install pulp```
+1. pulp (*Optional if you are only using this for pathway drawing*)
+```
+pip install pulp
+```
+
 2. pandas
-```pip install pandas```
+```
+pip install pandas
+```
+
 3. graphviz (for drawing pathway). The [Graphviz](http://www.graphviz.org/Download..php) software is required before installing the graphviz python package. 
     ```bash
     #If you have root access
@@ -52,4 +58,5 @@ Note: Commercial solvers are more robust than open source solvers.
     #Install the python graphviz
     pip install graphviz
     ```
-4. [Component-Contribution](https://github.com/eladnoor/component-contribution) or [Component-Contribution Fork](https://github.com/maranasgroup/component-contribution) (Optional if you are only using this for pathway drawing)
+
+4. [Component-Contribution](https://github.com/eladnoor/component-contribution) (*Optional if you are only using this for pathway drawing*)
