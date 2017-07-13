@@ -4,6 +4,7 @@ Perform OptStoic analysis using python code that share the same data files with 
 Note: All the examples are specific for glycolysis pathway generation. 
 Currently, the main package is available in `optstoicpy` folder. We are working to move more modules into the package. 
 
+
 ##Requirement:
 *GLPK 4.47 or GUROBI solver
 Note: Commercial solvers are more robust than open source solvers. 
@@ -24,7 +25,7 @@ Note: Commercial solvers are more robust than open source solvers.
 
 
 ##Current project dependencies:
-1. pulp 
+1. pulp (Optional if you are only using this for pathway drawing)
 ```pip install pulp```
 2. pandas
 ```pip install pandas```
@@ -51,4 +52,4 @@ Note: Commercial solvers are more robust than open source solvers.
     #Install the python graphviz
     pip install graphviz
     ```
-4. [Component-Contribution](https://github.com/eladnoor/component-contribution) or [Component-Contribution Fork](https://github.com/maranasgroup/component-contribution)
+4. [Component-Contribution](https://github.com/eladnoor/component-contribution) or [Component-Contribution Fork](https://github.com/maranasgroup/component-contribution) (Optional if you are only using this for pathway drawing)
