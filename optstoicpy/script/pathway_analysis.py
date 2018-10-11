@@ -1,13 +1,11 @@
 """Analyze similarity index between different set of pathways.
 Compare and combine pathways from different parallel simulation (e.g. python and gams).
 """
-# import sys
-# sys.path.append('../')
 import matplotlib
 #matplotlib.use('SVG')
 matplotlib.use('Agg')
-from ..core.pathway import Pathway, generate_kegg_model
-from ..core.drawpathway import *
+from optstoicpy.core.pathway import Pathway, generate_kegg_model
+from optstoicpy.core.drawpathway import *
 import numpy as np
 from matplotlib import cm
 import matplotlib.pyplot as plt

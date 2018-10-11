@@ -3,7 +3,9 @@
 Using Gurobi command line (gurobi_cl) to solve lp problem generated with Pulp.
 This is written to solve the issue of unable to install Gurobi in Cygwin.
 """
-import os, pdb, sys
+import os
+import pdb
+import sys
 from subprocess import Popen, PIPE
 
 

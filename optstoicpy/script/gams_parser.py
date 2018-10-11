@@ -1,5 +1,5 @@
 import os
-from ..core.reaction import *
+from optstoicpy.core.reaction import *
 #import csv
 
 # def parse_gams_input_remove_comment_and_quotes(data_filepath, data_filename, begin=1, end=-1):

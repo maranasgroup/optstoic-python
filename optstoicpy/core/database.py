@@ -1,9 +1,9 @@
 import os
-import logging
 import json
 import copy
-from ..script import gams_parser
 import pandas as pd
+from optstoicpy.script import gams_parser
+from optstoicpy.script.utils import create_logger
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -18,9 +18,30 @@ REACTION_TYPE = {0: 'Forward irreversible', 1: 'Reversible',
 class Database(object):
     """optstoic Database class: loading database from GAMS input file"""
 
-    def __init__(self, version='', data_filepath='../data/', dbdict={}):
+    def __init__(
+        self,
+        version='',
+        data_filepath='../data/',
+        dbdict={},
+        logger=None):
+        """Summary
+
+        Args:
+            version (str, optional): Description
+            data_filepath (str, optional): Description
+            dbdict (dict, optional): Description
+            logger (None, optional): Description
+        """
+        if logger is None:
+            self.logger = create_logger('core.Database')
+        else:
+            self.logger = logger
+
+        self.version=version
         self.data_filepath = data_filepath
         self.dbdict = dbdict
+
+        #initalize
         self.reactions = []
         self.metabolites = []
         self.S = {}
@@ -55,19 +76,19 @@ class Database(object):
             self.Sji = self.transpose_S(self.S)
 
         # Load reactions
-        logging.debug('Reading reaction file...')
+        self.logger.debug('Reading reaction file...')
         self.reactions = gams_parser.convert_set_to_list(
             os.path.join(self.data_filepath, self.dbdict['reaction'])
         )
 
         self.internal_rxns = copy.deepcopy(self.reactions)
 
-        logging.debug('Reading metabolite file...')
+        self.logger.debug('Reading metabolite file...')
         self.metabolites = gams_parser.convert_set_to_list(
             os.path.join(self.data_filepath, self.dbdict['metabolite'])
         )
 
-        logging.debug('Reading blocked reactions file...')
+        self.logger.debug('Reading blocked reactions file...')
         if 'blocked_rxns' in self.dbdict:
             self.blocked_rxns = gams_parser.convert_set_to_list(
                 os.path.join(self.data_filepath, self.dbdict['blocked_rxns'])
@@ -77,17 +98,17 @@ class Database(object):
             set(self.excluded_reactions + self.blocked_rxns)
         )
 
-        logging.debug('Reading reaction type file...')
+        self.logger.debug('Reading reaction type file...')
         self.rxntype = gams_parser.convert_parameter_list_to_dict(
             os.path.join(self.data_filepath, self.dbdict['reactiontype']),
             datadict=None
         )
 
-        logging.debug('Reading loop file...')
+        self.logger.debug('Reading loop file...')
         self.loops = gams_parser.convert_set_to_list(
             os.path.join(self.data_filepath, self.dbdict['loops']))
 
-        logging.debug('Reading Nint(loop, j) file...')
+        self.logger.debug('Reading Nint(loop, j) file...')
         self.Ninternal = gams_parser.convert_parameter_table_to_dict(
             os.path.join(self.data_filepath, self.dbdict['Nint']))
 
@@ -143,7 +164,7 @@ class Database(object):
     def set_database_export_reaction(self, export_reactions_Sij_dict):
         _, temp_rxn = self.update_S(export_reactions_Sij_dict)
         if len(self.user_defined_export_rxns) != 0:
-            logging.warning("Warning: The current list of export reactions\
+            self.logger.warning("Warning: The current list of export reactions\
                 will be replaced! %s" % str(self.user_defined_export_rxns))
         self.user_defined_export_rxns = temp_rxn
         for rxn in self.user_defined_export_rxns:
@@ -156,9 +177,9 @@ class Database(object):
                 t0 = self.rxntype[r]
                 self.rxntype[r] = rtype
             except KeyError:
-                logging.warning('Reaction %s not in database!' % r)
+                self.logger.warning('Reaction %s not in database!' % r)
             else:
-                logging.info('Reaction %s has been updated from %s to %s.'
+                self.logger.info('Reaction %s has been updated from %s to %s.'
                              % (r, REACTION_TYPE[t0], REACTION_TYPE[rtype])
                              )
 
@@ -183,12 +204,16 @@ class Database(object):
     #         return self.all_excluded_reactions
 
 
-    def __str__(self):
+    def __repr__(self):
         return "OptStoic Database(Version='%s')" % self.version
 
 
 def load_db_v3():
+    """Load OptStoic database v3
 
+    Returns:
+        TYPE: Description
+    """
     NTP_involving_rxns = gams_parser.convert_set_to_list(
         os.path.join(data_dir, 'NTP_and_AMP_reactions.txt')
     )
@@ -234,7 +259,7 @@ def load_db_v3():
         # Bicarbonate and pyrrole cycle
         'R09794',
         'R09795',
-        # Weird glucose uptake loop
+        # Undesirable glucose uptake loop
         'R00305',
         'R00874',
         'R07359',
@@ -268,7 +293,7 @@ def load_db_v3():
         'excluded_reactions_list': all_excluded_reactions
     }
 
-    DB = Database(data_filepath=data_dir, dbdict=dbdict)
+    DB = Database(version='3', data_filepath=data_dir, dbdict=dbdict)
     DB.load()
 
     # Update reaction type
