@@ -1,5 +1,5 @@
 from .pathway import Pathway
-from .config import cofactorsList, kegg_compound, color_configs
+from .config import cofactorsList, kegg_compound
 import graphviz as gv
 import os
 import logging
@@ -11,7 +11,55 @@ kegg_compound['C00013'] = 'PPi'
 kegg_compound['C00236'] = '1,3-Bisphospho-D-glycerate'
 kegg_compound['C00111'] = 'dihydroxyacetone phosphate'
 
-REACTION_FONT_SIZE = '20'
+REACTION_FONT_SIZE = '28'
+color_configs = {}
+color_configs['light'] = dict(COFACTOR_SHAPE="ellipse",  # "diamond"
+                              OTHER_COFACTOR_COLOR='#B6B6B6',
+                              NONCOFACTOR_SHAPE="plaintext",  # "box"
+                              NONCOFACTOR_COLOR='transparent',  # "#FFFFFF"
+                              REACTION_COLOR="#512DA8",
+                              RXN_NODE_COLOR="#323232",
+                              EDGE_COLOR="#323232",  # "#505050"
+                              BACKGROUND_COLOR="transparent",
+                              ALL_FONT_COLOR="black")
+# color_configs['light']['colorMapping'] = {
+#     'C00002': '#F05456', 'C00008': '#F05456',
+#     'C00003': '#FFEB3B', 'C00004': '#FFEB3B',
+#     'C00005': '#9dd3ee', 'C00006': '#9dd3ee'
+# }
+
+# color_configs['light']['colorMapping'] = {
+#     'C00002': '#F05456', 'C00008': '#FFC000',
+#     'C00003': '#149B76', 'C00004': '#149B76',
+#     'C00005': '#2393CB', 'C00006': '#2393CB'
+# }
+
+color_configs['light']['colorMapping'] = {
+    'C00002': '#F05456', 'C00008': '#fc9fa0' #'#FFC000'
+}
+
+
+# For blue background
+color_configs['dark'] = dict(COFACTOR_SHAPE="ellipse",  # "diamond"
+                             OTHER_COFACTOR_COLOR="#7F7F7F",
+                             NONCOFACTOR_SHAPE="plaintext",  # "box"
+                             NONCOFACTOR_COLOR="transparent",  # "#CCFF33"
+                             REACTION_COLOR="#FFFF00",
+                             EDGE_COLOR="#E5E5E5",  # "#505050"
+                             RXN_NODE_COLOR="#E5E5E5",
+                             BACKGROUND_COLOR="transparent",
+                             ALL_FONT_COLOR="white")
+# color_configs['dark']['colorMapping'] = {
+#     'C00002': '#F05456', 'C00008': '#FFC000',
+    # 'C00003': '#149B76', 'C00004': '#149B76',
+    # 'C00005': '#2393CB', 'C00006': '#2393CB'
+# }
+
+color_configs['dark']['colorMapping'] = {
+    'C00002': '#F05456', 'C00008': '#fc9fa0', #'#FFC000'
+    'C00003': '#149B76', 'C00004': '#149B76',
+    'C00005': '#2393CB', 'C00006': '#2393CB'
+}
 
 # ########################################
 
@@ -33,7 +81,7 @@ def load_global_styles(colorConfig):
         },
         'nodes': {
             'fontname': 'Helvetica',
-            'fontsize': '25',
+            'fontsize': '30',
             # 'shape': 'hexagon',
             'fontcolor': colorConfig['ALL_FONT_COLOR'],
             # 'color': 'white',
@@ -45,7 +93,7 @@ def load_global_styles(colorConfig):
             # 'color': 'white',
             # 'arrowhead': 'open',
             'fontname': 'Helvetica',
-            'fontsize': '14',
+            'fontsize': '24',
             # 'fontcolor': 'white',
         }
     }
@@ -105,6 +153,10 @@ def draw_pathway(Pathway, imageFileName=None, imageFormat='png',
         colorConfig = color_configs['light']
 
     global_styles, colorMapping = load_global_styles(colorConfig)
+    metabolite_fontname = 'helvetica bold'
+    #bypass issue with transparent color for vector image in AI
+    if imageFormat.lower() in ['svg', 'eps']:
+        colorConfig['NONCOFACTOR_COLOR'] = '#FFFFFF'
 
     g = gv.Digraph('G', format=imageFormat, engine=engine)
 
@@ -163,7 +215,7 @@ def draw_pathway(Pathway, imageFileName=None, imageFormat='png',
                        color=colorConfig['EDGE_COLOR'])
             else:
                 g.node(met, shape=colorConfig['NONCOFACTOR_SHAPE'],
-                       label=kegg_compound[met], fontname='helvetica bold',
+                       label=kegg_compound[met], fontname=metabolite_fontname,
                        style="filled", color=colorConfig['NONCOFACTOR_COLOR'])
                 g.edge(met, rxn.rid, penwidth=lineW, weight='2',
                        arrowhead="none", color=colorConfig['EDGE_COLOR'])
@@ -182,7 +234,7 @@ def draw_pathway(Pathway, imageFileName=None, imageFormat='png',
                        penwidth=lineW, color=colorConfig['EDGE_COLOR'])
             else:
                 g.node(met, shape=colorConfig['NONCOFACTOR_SHAPE'],
-                       label=kegg_compound[met], fontname='helvetica bold',
+                       label=kegg_compound[met], fontname=metabolite_fontname,
                        style="filled", color=colorConfig['NONCOFACTOR_COLOR'])
                 g.edge(rxn.rid, met, penwidth=lineW, weight='2',
                        color=colorConfig['EDGE_COLOR'])

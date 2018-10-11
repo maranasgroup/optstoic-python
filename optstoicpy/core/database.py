@@ -40,7 +40,7 @@ class Database(object):
             self.Sji = json.load(open(os.path.join(self.data_filepath,
                                                    self.dbdict['Sji']), 'r+'))
 
-            self.S = self.tranpose_S(self.Sji)
+            self.S = self.transpose_S(self.Sji)
         else:
             try:
                 self.S = json.load(open(os.path.join(self.data_filepath,
@@ -52,7 +52,7 @@ class Database(object):
                     os.path.join(self.data_filepath,
                                  '20160616_optstoic_Sij.txt')
                 )
-            self.Sji = self.tranpose_S(self.S)
+            self.Sji = self.transpose_S(self.S)
 
         # Load reactions
         logging.debug('Reading reaction file...')
@@ -92,7 +92,7 @@ class Database(object):
             os.path.join(self.data_filepath, self.dbdict['Nint']))
 
     @staticmethod
-    def tranpose_S(Sji):
+    def transpose_S(Sji):
         """Tranpose Sji into Sij and also Sij to Sji dictionary."""
         # Update to pandas 0.19 (using sparse dataframe)
         df_Sji = pd.DataFrame(Sji).T
@@ -143,8 +143,8 @@ class Database(object):
     def set_database_export_reaction(self, export_reactions_Sij_dict):
         _, temp_rxn = self.update_S(export_reactions_Sij_dict)
         if len(self.user_defined_export_rxns) != 0:
-            print "Warning: The current list of export reactions\
-                will be replaced! %s" % str(self.user_defined_export_rxns)
+            logging.warning("Warning: The current list of export reactions\
+                will be replaced! %s" % str(self.user_defined_export_rxns))
         self.user_defined_export_rxns = temp_rxn
         for rxn in self.user_defined_export_rxns:
             self.rxntype[rxn] = 4
@@ -318,7 +318,7 @@ def load_db_v3():
         'EX_nadph': {'C00005': -1.0}
     }
 
-    user_defined_export_rxns_Sij = Database.tranpose_S(
+    user_defined_export_rxns_Sij = Database.transpose_S(
         user_defined_export_rxns_Sji
     )
 

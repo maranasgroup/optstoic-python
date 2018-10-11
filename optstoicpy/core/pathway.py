@@ -55,12 +55,16 @@ class Pathway(object):
             self.fluxes = fluxes
             # Create list of reaction objects
             self.reactions = Reaction.create_Reaction_list_from_dict(
-                {'reaction_id': self.reaction_ids, 'flux': self.fluxes})
+                {'reaction_id': self.reaction_ids, 'flux': self.fluxes},
+                excludeExchangeRxn=True)
+
         # Iniatilize pathway object using list of reaction objects
         else:
             self.reactions = reactions
             self.fluxes = [r.flux for r in reactions]
             self.reaction_ids = [r.rid for r in reactions]
+
+        self.reaction_ids_no_exchange = [r for r in reaction_ids if 'EX_' not in r]
 
         if not self.total_flux_no_exchange:
             self.total_flux_no_exchange = sum(map(
@@ -184,6 +188,14 @@ class Pathway(object):
         idscore = len(a & b) / len(a | b)
         return idscore
 
+    def get_pathway_similarity_index_no_exchange(self, pathway2):
+        """Calculate the jaccard index of two pathways"""
+        a = set(self.reaction_ids_no_exchange)
+        b = set(pathway2.reaction_ids_no_exchange)
+        idscore = len(a & b) / len(a | b)
+        return idscore
+
+
     def is_same_pathway_with(self, another_pathway):
         idscore = self.get_pathway_similarity_index(another_pathway)
         if idscore == 1:
@@ -255,7 +267,7 @@ C_RANGE\t\t{C_RANGE[0]:.0e} {C_RANGE[1]:.0e}\n""".format(**params)
         else:
             modeltext += "\t\t\t{0} {1[0]:e} {1[1]:e}\n".format(cid, bounds)
 
-    # write the reactions
+    # write the reactions (in the direction of the flux)
     for i, rxn in enumerate(pathway.reactions):
         rxn.set_equation()
         if i == 0:
