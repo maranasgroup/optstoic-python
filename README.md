@@ -1,13 +1,13 @@
 OptStoic python package
 ========================
-Perform OptStoic analysis using python code that share the same data files with GAMS code. 
+Perform OptStoic analysis using Python code that share the same data files with GAMS code.
+
 Note: All the examples are specific for glycolysis pathway generation. 
 Currently, the main package is available in `optstoicpy` folder. We are working to move more modules into the package. 
 
 
-##Requirement:
+## Requirement:
 *GLPK 4.47 or GUROBI solver
-Note: Commercial solvers are more robust than open source solvers. 
 
 1. GLPK 4.47 installation
     ```bash
@@ -24,8 +24,8 @@ Note: Commercial solvers are more robust than open source solvers.
 2. GUROBI Optimization provide academic license for free (https://www.gurobi.com/). Install gurobipy following the instruction provided by GUROBI. 
 
 
-##Current project dependencies:
-1. pulp (*Optional if you are only using this for pathway drawing*)
+## Current project dependencies:
+1. pulp
 ```
 pip install pulp
 ```
@@ -35,12 +35,12 @@ pip install pulp
 pip install pandas
 ```
 
-3. graphviz (for drawing pathway). The [Graphviz](http://www.graphviz.org/Download..php) software is required before installing the graphviz python package. 
+3. graphviz (Optional, for drawing pathway). The [Graphviz](https://www.graphviz.org/) software is required before installing the graphviz python package. 
     ```bash
     #If you have root access
     sudo apt-get install graphviz
 
-    #If you do not have root access (you can get a different version of graphviz from their website http://www.graphviz.org/Download_source.php)
+    #If you do not have root access (you can get a different version of Graphviz from their website https://www.graphviz.org/download/)
     cd $HOME
     mkdir -p bin/graphviz
     wget http://www.graphviz.org/pub/graphviz/stable/SOURCES/graphviz-2.38.0.tar.gz
@@ -54,9 +54,8 @@ pip install pandas
     # Add the following line to your .bashrc
     export PATH=$PATH:$HOME/bin/graphviz/bin
 
-
-    #Install the python graphviz
+    #Install the Python graphviz package
     pip install graphviz
     ```
 
-4. [Component-Contribution](https://github.com/eladnoor/component-contribution) (*Optional if you are only using this for pathway drawing*)
+4. [Component-Contribution](https://github.com/eladnoor/component-contribution) (*Optional, unless you want to perform MDF analysis)
