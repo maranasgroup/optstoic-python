@@ -1,13 +1,13 @@
 OptStoic python package
 ========================
-Perform OptStoic analysis using Python code that share the same data files with GAMS code.
+Perform optStoic analysis using Python code that share the same data files with GAMS code.
 
 Note: All the examples are specific for glycolysis pathway generation. 
 Currently, the main package is available in `optstoicpy` folder. We are working to move more modules into the package. 
 
 
 ## Requirement:
-*GLPK 4.47 or GUROBI solver
+At least one of the following optimization solvers should be installed. To solve the loopless optStoic formulation, an optimization solver other than GLPK is recommended.
 
 1. GLPK 4.47 installation
     ```bash
@@ -23,19 +23,32 @@ Currently, the main package is available in `optstoicpy` folder. We are working 
 
 2. GUROBI Optimization provide academic license for free (https://www.gurobi.com/). Install gurobipy following the instruction provided by GUROBI. 
 
+3. [SCIP Optimization Suite](https://scip.zib.de/) >= v4.0.0
+    ```
+sudo apt-get install libgmp-dev libreadline-dev zlib1g-dev libncurses5-dev
+tar xvf scipoptsuite-6.0.0.tgz
+cd scipoptsuite-6.0.0/
+make
+make test
+cd scip-6.0.0/
+sudo make install INSTALLDIR="/usr/local/"
+/usr/local/bin/scip --version
+    ```
+
+4. [CPLEX Optimizer](https://www.ibm.com/analytics/cplex-optimizer)
 
 ## Current project dependencies:
-1. pulp
-```
+1. [PuLP](https://github.com/coin-or/pulp). Run the [test](https://www.coin-or.org/PuLP/main/installing_pulp_at_home.html#testing-your-pulp-installation).
+    ```
 pip install pulp
-```
+    ```
 
-2. pandas
-```
+2. [pandas](https://pandas.pydata.org/)
+    ```
 pip install pandas
-```
+    ```
 
-3. graphviz (Optional, for drawing pathway). The [Graphviz](https://www.graphviz.org/) software is required before installing the graphviz python package. 
+3. Graphviz (Optional, for drawing pathway). The [Graphviz](https://www.graphviz.org/) software is required before installing the graphviz python package. 
     ```bash
     #If you have root access
     sudo apt-get install graphviz
