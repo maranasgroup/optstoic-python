@@ -1,11 +1,8 @@
 #/usr/bin/python
 """
-Loopless OptStoic program to identify glycolytic pathway
-(glucose to pyruvate) for n ATP production.
+Loopless OptStoic program to identify any pathway.
 It read input files that are used for GAMS.
 Currently, it has been tested with GLPK, Gurobi and CPLEX solver.
-
-Author: Chiam Yu
 
 To-do list:
 2. generalize the input for designing other pathways
@@ -50,9 +47,10 @@ class OptStoic(object):
     def __init__(self,
                  database,
                  objective='MinFlux',
-                 zlb=8,
-                 specific_bounds={},
-                 use_loopless=True,
+                 zlb=None,
+                 specific_bounds=None,
+                 custom_flux_constraints=None,
+                 add_loopless_constraints=True,
                  max_iteration=2,
                  pulp_solver=None,
                  data_filepath=DATA_DIR,
@@ -64,8 +62,13 @@ class OptStoic(object):
             database (TYPE): An optStoic Database object (equivalent to GSM model)
             objective (str, optional): The mode for optStoic pathway prospecting.
                 Options available are: ['MinFlux', 'MinRxn']
-            nATP (int, optional): The number of ATP
-            zlb (int, optional): The lowerbound on objective value z
+            zlb (int, optional): The lowerbound on objective value z. If not provided,
+                the integer cut constraints may not work properly when the objective value increases.
+            specific_bounds (dict, optional): LB and UB for exchange reactions which defined the
+                overall pathway equations. E.g. {'Ex_glc': {'LB': -1, 'UB':-1}}
+            add_loopless_constraints (bool, optional): If True, use loopless constraints.
+                If False, run optStoic without loopless constraint (faster, but the pathway
+                may contain loops).
             max_iteration (int, optional): The default maximum number of iteration
             pulp_solver (None, optional): A pulp.solvers object (load any of the user-defined solver)
             data_filepath (TYPE, optional): Filepath for data
@@ -79,15 +82,17 @@ class OptStoic(object):
             self.logger = logger
 
         self.objective = objective
-        self.nATP = nATP
         self.zlb = zlb
+
+        if specific_bounds is None:
+            raise Exception("specific_bounds must be specified!")
+        self.specific_bounds = specific_bounds
+        self.add_loopless_constraints = add_loopless_constraints
+        self.custom_flux_constraints = custom_flux_constraints
         self.M = M
 
-        # When nATP is not integer, change variables v, vf and vb to continuous variables
-        if float(nATP).is_integer():
-            self._varCat = 'Integer'
-        else:
-            self._varCat = 'Continuous'
+        self.varCat = 'Integer'
+        # self._varCat = 'Continuous'
 
         self.max_iteration = max_iteration
         self.data_filepath = data_filepath
@@ -120,8 +125,8 @@ class OptStoic(object):
                              "Please use either 'MinFlux' or 'MinRxn'.")
         self.objective = new_objective
 
-    def change_nATP(self, new_nATP):
-        self.nATP = new_nATP
+    def change_zlb(self, zlb):
+        self.zlb = zlb
 
     def create_minflux_problem(self):
         """
@@ -144,10 +149,6 @@ class OptStoic(object):
             v(j) >= -M * (1 - a(j))
             v(j) <= M * a(j)
 
-            v('EX_nadph') + v('EX_nadh') = 2;
-            v('EX_nadp') + v('EX_nad') = -2;
-            v('EX_nadh') + v('EX_nad') = 0;
-            v('EX_nadph') + v('EX_nadp') = 0;
         """
         self.logger.info("Formulating problem...")
         # Scalar
@@ -164,10 +165,17 @@ class OptStoic(object):
                                    lowBound=0, upBound=1, cat='Binary')
         yb = pulp.LpVariable.dicts("yb", self.database.reactions,
                                    lowBound=0, upBound=1, cat='Binary')
-        a = pulp.LpVariable.dicts("a", self.database.reactions,
-                                  lowBound=0, upBound=1, cat='Binary')
-        G = pulp.LpVariable.dicts("G", self.database.reactions,
-                                  lowBound=-M, upBound=M, cat='Continuous')
+
+        if self.add_loopless_constraints:
+            a = pulp.LpVariable.dicts("a", self.database.reactions,
+                                      lowBound=0, upBound=1, cat='Binary')
+            G = pulp.LpVariable.dicts("G", self.database.reactions,
+                                      lowBound=-M, upBound=M, cat='Continuous')
+        else:
+            a = None
+            G = None
+
+        # Update lower and upper bound based on reaction directionality
 
         for j in self.database.reactions:
 
@@ -207,32 +215,13 @@ class OptStoic(object):
                 v[j].upBound = 0
 
         # Fix stoichiometry of source/sink metabolites
-        # Allow user to change this for generalization
-        v['EX_glc'].lowBound = -1
-        v['EX_glc'].upBound = -1
-        v['EX_pyruvate'].lowBound = 2
-        v['EX_pyruvate'].upBound = 2
-        v['EX_nad'].lowBound = -2
-        v['EX_nad'].upBound = 0
-        v['EX_nadh'].lowBound = 0
-        v['EX_nadh'].upBound = 2
-        v['EX_nadp'].lowBound = -2
-        v['EX_nadp'].upBound = 0
-        v['EX_nadph'].lowBound = 0
-        v['EX_nadph'].upBound = 2
-        v['EX_adp'].lowBound = -self.nATP
-        v['EX_adp'].upBound = -self.nATP
-        v['EX_phosphate'].lowBound = -self.nATP
-        v['EX_phosphate'].upBound = -self.nATP
-        v['EX_atp'].lowBound = self.nATP
-        v['EX_atp'].upBound = self.nATP
-        v['EX_h2o'].lowBound = self.nATP
-        v['EX_h2o'].upBound = self.nATP
-        v['EX_hplus'].lowBound = -10
-        v['EX_hplus'].upBound = 10
+        for rxn, bounds in self.specific_bounds.iteritems():
+            v[rxn].lowBound = bounds['LB']
+            v[rxn].upBound = bounds['UB']
 
         LB = {}
         UB = {}
+
         for j in self.database.reactions:
             LB[j] = v[j].lowBound
             UB[j] = v[j].upBound
@@ -252,8 +241,10 @@ class OptStoic(object):
                                     for j in self.database.reactions
                                     if self.database.rxntype[j] != 4])
             lp_prob += condition, "MinFlux"
-            #fix lower bound
-            lp_prob += condition == self.zlb, 'zLowerBound'
+
+            if self.zlb is not None:
+                # fix lower bound
+                lp_prob += condition == self.zlb, 'zLowerBound'
 
         # Constraints
         # Mass_balance
@@ -286,29 +277,32 @@ class OptStoic(object):
                 # Ensure that either yf or yb can be 1, not both
                 lp_prob += yf[j] + yb[j] <= 1, 'cons5_%s' % j
 
-        loop_rxn = list(set(self.database.internal_rxns) - set(self.database.blocked_rxns))
+        if self.add_loopless_constraints:
+            self.logger.info("Loopless constraints are turned on.")
 
-        # Loopless contraints
-        for l in self.database.loops:
-            label = "loopless_cons_%s" % l
-            dot_N_G = pulp.lpSum([self.database.Ninternal[l][j] * G[j]
-                                  for j in self.database.Ninternal[l].keys()])
-            condition = dot_N_G == 0
-            lp_prob += condition, label
+            loop_rxn = list(set(self.database.internal_rxns) - set(self.database.blocked_rxns))
 
-        for j in loop_rxn:
-            lp_prob += G[j] >= -M * a[j] + (1 - a[j]), "llcons1_%s" % j
-            lp_prob += G[j] <= -a[j] + M * (1 - a[j]), "llcons2_%s" % j
-            lp_prob += v[j] >= -M * (1 - a[j]), "llcons3_%s" % j
-            lp_prob += v[j] <= M * a[j], "llcons4_%s" % j
+            # Loopless contraints
+            for l in self.database.loops:
+                label = "loopless_cons_%s" % l
+                dot_N_G = pulp.lpSum([self.database.Ninternal[l][j] * G[j]
+                                      for j in self.database.Ninternal[l].keys()])
+                condition = dot_N_G == 0
+                lp_prob += condition, label
 
-        #lp_prob += v['R00756'] == 1, 'enforce_pfk'
+            for j in loop_rxn:
+                lp_prob += G[j] >= -M * a[j] + (1 - a[j]), "llcons1_%s" % j
+                lp_prob += G[j] <= -a[j] + M * (1 - a[j]), "llcons2_%s" % j
+                lp_prob += v[j] >= -M * (1 - a[j]), "llcons3_%s" % j
+                lp_prob += v[j] <= M * a[j], "llcons4_%s" % j
 
-        #Fix nad(p)h production and consumption
-        lp_prob += v['EX_nadph'] + v['EX_nadh'] == 2, 'nadphcons1'
-        lp_prob += v['EX_nadp'] + v['EX_nad'] == -2, 'nadphcons2'
-        lp_prob += v['EX_nadh'] + v['EX_nad'] == 0, 'nadphcons3'
-        lp_prob += v['EX_nadph'] + v['EX_nadp'] == 0, 'nadphcons4'
+        # Fix nad(p)h production and consumption
+        if self.custom_flux_constraints is not None:
+            self.logger.info("Custom constraints added for redox balance.")
+
+            for group in self.custom_flux_constraints:
+                lp_prob += pulp.lpSum(v[rxn] for rxn in group['reactions']) <= group['UB'], "%s_UB"%group['constraint_name']
+                lp_prob += pulp.lpSum(v[rxn] for rxn in group['reactions']) >= group['LB'], "%s_LB"%group['constraint_name']
 
         return lp_prob, v, vf, vb, yf, yb, a, G
 
@@ -551,7 +545,7 @@ class OptStoic(object):
         return self.lp_prob, self.pathways
 
     def __repr__(self):
-        return "<OptStoic(nATP='%s', objective='%s')>" % (self.nATP, self.objective)
+        return "<OptStoic(objective='%s')>" % (self.objective)
 
 
 
@@ -567,18 +561,60 @@ if __name__ == '__main__':
         solver_names=['GLPK_CMD', 'GUROBI', 'GUROBI_CMD', 'CPLEX_CMD'],
         logger=logger)
 
+    # Generalize custom flux constraints:
+    # E.g.,
+    # v('EX_nadph') + v('EX_nadh') = 2;
+    # v('EX_nadp') + v('EX_nad') = -2;
+    # v('EX_nadh') + v('EX_nad') = 0;
+    # v('EX_nadph') + v('EX_nadp') = 0;
+    # became
+    # lp_prob += v['EX_nadph'] + v['EX_nadh'] == 2, 'nadphcons1'
+    # lp_prob += v['EX_nadp'] + v['EX_nad'] == -2, 'nadphcons2'
+    # lp_prob += v['EX_nadh'] + v['EX_nad'] == 0, 'nadphcons3'
+    # lp_prob += v['EX_nadph'] + v['EX_nadp'] == 0, 'nadphcons4'
+
+    custom_flux_constraints = [
+        {'constraint_name': 'nadphcons1',
+         'reactions': ['EX_nadph', 'EX_nadh'],
+         'UB': 2,
+         'LB': 2},
+        {'constraint_name': 'nadphcons2',
+        'reactions': ['EX_nadp', 'EX_nad'],
+        'UB': -2,
+        'LB': -2},
+        {'constraint_name': 'nadphcons3',
+        'reactions': ['EX_nadh', 'EX_nad'],
+        'UB': 0,
+        'LB': 0},
+        {'constraint_name': 'nadphcons4',
+        'reactions': ['EX_nadph', 'EX_nadp'],
+        'UB': 0,
+        'LB': 0}]
+
+    specific_bounds = {'EX_glc': {'LB': -1, 'UB': -1},
+                    'EX_pyruvate': {'LB': 2, 'UB': 2},
+                    'EX_nad': {'LB': -2, 'UB': 0},
+                    'EX_nadh': {'LB': 0, 'UB': 2},
+                    'EX_nadp': {'LB': -2, 'UB': 0},
+                    'EX_nadph': {'LB': 0, 'UB': 2},
+                    'EX_adp': {'LB': -1, 'UB': -1},
+                    'EX_phosphate': {'LB': -1, 'UB': -1},
+                    'EX_atp': {'LB': 1, 'UB': 1},
+                    'EX_h2o': {'LB': 1, 'UB': 1},
+                    'EX_hplus': {'LB': -10, 'UB': 10}} #pulp/gurobi has issue with "h+"
+
     test = OptStoic(database=db3,
                     objective='MinFlux',
-                    nATP=1,
-                    zlb=10,
+                    zlb=None,
+                    specific_bounds=specific_bounds,
+                    custom_flux_constraints=custom_flux_constraints,
+                    add_loopless_constraints=True,
                     max_iteration=1,
                     pulp_solver=pulp_solver,
                     data_filepath=DATA_DIR,
                     result_filepath='./result/',
                     M=1000,
                     logger=logger)
-
-    #test = OptStoic(nATP=2, objective='MinFlux', data_filepath=DATA_DIR, result_filepath=res_dir)
 
     if sys.platform == 'cygwin':
         lp_prob, pathways = test.solve_gurobi_cl(outputfile='test_optstoic_cyg.txt', cleanup=False)

@@ -135,7 +135,7 @@ class Database(object):
         try:
             self.rxntype[rid]
         except:
-            print "Reaction %s not in database!" % rid
+            self.logger.warning("Reaction %s not in database!" % rid)
             return None
         else:
             if verbose:
@@ -143,6 +143,17 @@ class Database(object):
                     rid, self.rxntype[rid], REACTION_TYPE[self.rxntype[rid]]
                 )
             return self.rxntype[rid]
+
+    def set_reaction_type(self, rid, rxntype):
+        try:
+            t0 = self.rxntype[rid]
+            self.rxntype[r] = rxntype
+        except KeyError:
+            self.logger.warning('Reaction %s not in database!' % r)
+        else:
+            self.logger.info('Reaction %s has been updated from %s to %s.'
+                         % (r, REACTION_TYPE[t0], REACTION_TYPE[rtype])
+                         )
 
     def extend_S_from_file(self, filename='Sij_extension_for_glycolysis.txt'):
         self.S = gams_parser.convert_parameter_table_to_dict(
@@ -167,22 +178,13 @@ class Database(object):
             self.logger.warning("Warning: The current list of export reactions\
                 will be replaced! %s" % str(self.user_defined_export_rxns))
         self.user_defined_export_rxns = temp_rxn
+
         for rxn in self.user_defined_export_rxns:
-            self.rxntype[rxn] = 4
-        return 1
+            self.set_reaction_type(rxn, 4)
 
     def update_rxntype(self, new_reaction_type_dict):
         for (r, rtype) in new_reaction_type_dict.iteritems():
-            try:
-                t0 = self.rxntype[r]
-                self.rxntype[r] = rtype
-            except KeyError:
-                self.logger.warning('Reaction %s not in database!' % r)
-            else:
-                self.logger.info('Reaction %s has been updated from %s to %s.'
-                             % (r, REACTION_TYPE[t0], REACTION_TYPE[rtype])
-                             )
-
+            self.set_reaction_type(r, rtype)
         return self.rxntype
 
     # def create_excluded_reactions_list(self, use_default=True, user_defined_reactions=None):
@@ -208,7 +210,21 @@ class Database(object):
         return "OptStoic Database(Version='%s')" % self.version
 
 
-def load_db_v3():
+def load_db_v3(
+    user_defined_export_rxns_Sji = {
+        'EX_glc': {'C00031': -1.0},
+        'EX_nad': {'C00003': -1.0},
+        'EX_adp': {'C00008': -1.0},
+        'EX_phosphate': {'C00009': -1.0},
+        'EX_pyruvate': {'C00022': -1.0},
+        'EX_nadh': {'C00004': -1.0},
+        'EX_atp': {'C00002': -1.0},
+        'EX_h2o': {'C00001': -1.0},
+        'EX_hplus': {'C00080': -1.0},
+        'EX_nadp': {'C00006': -1.0},
+        'EX_nadph': {'C00005': -1.0}
+        }
+    ):
     """Load OptStoic database v3
 
     Returns:
@@ -329,25 +345,14 @@ def load_db_v3():
     #                             'EX_phosphate', 'EX_pyruvate', 'EX_nadh',
     #                             'EX_atp', 'EX_h2o', 'EX_hplus', 'EX_nadp',
     #                             'EX_nadph']
-    user_defined_export_rxns_Sji = {
-        'EX_glc': {'C00031': -1.0},
-        'EX_nad': {'C00003': -1.0},
-        'EX_adp': {'C00008': -1.0},
-        'EX_phosphate': {'C00009': -1.0},
-        'EX_pyruvate': {'C00022': -1.0},
-        'EX_nadh': {'C00004': -1.0},
-        'EX_atp': {'C00002': -1.0},
-        'EX_h2o': {'C00001': -1.0},
-        'EX_hplus': {'C00080': -1.0},
-        'EX_nadp': {'C00006': -1.0},
-        'EX_nadph': {'C00005': -1.0}
-    }
 
-    user_defined_export_rxns_Sij = Database.transpose_S(
-        user_defined_export_rxns_Sji
-    )
+    # Add a list of export reactions and the metabolites
+    if user_defined_export_rxns_Sji is not None:
+        user_defined_export_rxns_Sij = Database.transpose_S(
+            user_defined_export_rxns_Sji
+        )
 
-    DB.set_database_export_reaction(user_defined_export_rxns_Sij)
+        DB.set_database_export_reaction(user_defined_export_rxns_Sij)
 
     return DB
 
