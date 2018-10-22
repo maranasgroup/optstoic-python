@@ -15,26 +15,32 @@ Can only update them using function.
 class Pathway(object):
     """OptStoic Pathway class"""
 
-    def __init__(self, id=None, name=None,
-                 reaction_ids=[], fluxes=[], reactions=None,
-                 sourceSubstrateID='C00031', endSubstrateID='C00022',
-                 total_flux_no_exchange=None, note={}):
+    def __init__(self, 
+                 id=None, 
+                 name=None,
+                 reaction_ids=[], 
+                 fluxes=[], 
+                 reactions=None,
+                 sourceSubstrateID='C00031', 
+                 endSubstrateID='C00022',
+                 total_flux_no_exchange=None, 
+                 note={}):
         """
         A Pathway instance can be initialized by either
             (a) List of reaction_ids and fluxes (Let reactions = None)
             (b) List of reaction instances (reaction_ids and fluxes
                 will be populated)
-
-        Keyword arguments:
-        id -- pathway id
-        name -- pathway name
-        reaction_ids -- list of reaction IDs (kegg_id) in the pathway
-        fluxes -- list of reaction fluxes corresponding to the reaction_ids
-        reactions  -- list of reaction object that form the pathway
-        sourceSubstrateID -- Kegg compound ID of the source metabolite of
-                             the pathway
-        endSubstrateID -- Kegg compound ID of the end metabolite of the pathway
-        note -- (For debugging purpose) modelstat and solvestat can be added
+        Args:
+            id (None, optional): Pathway id
+            name (None, optional): Pathway name
+            reaction_ids (list, optional): A list of reaction IDs (kegg_id) in the pathway
+            fluxes (list, optional): A list of reaction fluxes corresponding to the reaction_ids
+            reactions (None, optional): Description
+            sourceSubstrateID (str, optional): Kegg compound ID of the source metabolite of
+                the pathway
+            endSubstrateID (str, optional): Kegg compound ID of the end metabolite of the pathway
+            total_flux_no_exchange (None, optional): Sum of absolute flux through the pathway (Exclude export reactions)
+            note (dict, optional): (For debugging purpose) modelstat and solvestat can be added
         """
         self.id = id
         self.name = name
@@ -126,8 +132,9 @@ class Pathway(object):
 
     def rearrange_reaction_order(self):
         """
-        Try to implement a topological sorting of the pathway
-        (Todo: use a different algorithm)
+        Try to implement a topological sorting of the pathway.
+        This was done in a very early stage of the project.
+        (Todo: use a different algorithm, e.g., graph-based breadth-first search algorithm)
 
         """
         # Exclude exchange reaction from being rearranged
@@ -221,18 +228,24 @@ class Pathway(object):
 # ----------------------------------------------------------------------------
 
 
-def generate_kegg_model(pathway, params=default_params,
-                        filehandle=None, add_ratio_constraints=False):
+def generate_kegg_model(pathway, 
+                        params=default_params,
+                        filehandle=None, 
+                        add_ratio_constraints=False):
     """
     Convert the pathway to KEGG model format
     (as input for Component Contribution/MDF)
-
-    Keyword arguments:
-    pathway -- pathway object
-    params -- Kegg model parameters (default parameters are given)
-    filehandle -- If a text file handle is provided,
-                  it write the model text to the file (default None)
-
+    
+    Args:
+        pathway (TYPE): A pathway instance
+        params (TYPE, optional): KEGG model parameters (default parameters are given)
+        filehandle (None, optional): If a text file handle is provided,
+            it writes the model text to the file (default None)
+        add_ratio_constraints (bool, optional): Description
+    
+    Returns:
+        TYPE: Description
+    
     """
     params['ENTRY'] = "{0}_{1}ATP_P{2}".format(pathway.name,
                                                pathway.nATP, pathway.id)
