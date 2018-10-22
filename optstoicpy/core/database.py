@@ -16,7 +16,27 @@ REACTION_TYPE = {0: 'Forward irreversible', 1: 'Reversible',
 
 
 class Database(object):
-    """optstoic Database class: loading database from GAMS input file"""
+    """optstoic Database class: loading database from GAMS input file
+
+    Attributes:
+        all_excluded_reactions (list): TODO: All reactions in this list can be removed
+            from the S matrix to reduce the number of redundant variables.
+        blocked_rxns (list): Description
+        data_filepath (TYPE): Description
+        dbdict (TYPE): Description
+        excluded_reactions (TYPE): Description
+        internal_rxns (TYPE): Description
+        logger (TYPE): Description
+        loops (list): Description
+        metabolites (list): Description
+        Ninternal (dict): Description
+        reactions (list): Description
+        rxntype (list): Description
+        S (dict): Description
+        Sji (dict): Description
+        user_defined_export_rxns (list): Description
+        version (TYPE): Description
+    """
 
     def __init__(
         self,
