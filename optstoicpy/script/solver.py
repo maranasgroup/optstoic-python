@@ -2,7 +2,7 @@ import pulp
 from optstoicpy.script.utils import create_logger
 
 def load_pulp_solver(
-    solver_names=['GUROBI', 'GUROBI_CMD', 'CPLEX_CMD', 'GLPK_CMD'],
+    solver_names=['SCIP_CMD', 'GUROBI', 'GUROBI_CMD', 'CPLEX_CMD', 'GLPK_CMD'],
     logger=None):
     """Load a pulp solver based on what is available.
 
@@ -30,6 +30,10 @@ def load_pulp_solver(
     GLPK_CMD_OPTIONS  = ['--clique', '--pcost', '--gomory', '--mipgap', '1e-6']
 
     pulp_solvers = {
+        'SCIP_CMD': pulp.solvers.SCIP_CMD(
+            keepFiles=0,
+            mip=True,
+            msg=True),
         'GUROBI': pulp.solvers.GUROBI(
             mip=True,
             msg=True,

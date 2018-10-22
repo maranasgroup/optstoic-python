@@ -2,7 +2,7 @@
 """
 Loopless OptStoic program to identify any pathway.
 It read input files that are used for GAMS.
-Currently, it has been tested with GLPK, Gurobi and CPLEX solver.
+Currently, it has been tested with SCIP, GLPK (without loopless constraints), Gurobi and CPLEX solvers.
 
 To-do list:
 2. generalize the input for designing other pathways
@@ -31,7 +31,6 @@ import json
 from optstoicpy.core import database
 from optstoicpy.script.utils import create_logger
 from optstoicpy.script.solver import load_pulp_solver
-from optstoicpy.script import DATA_DIR
 from gurobi_command_line_solver import *
 
 # Global variables/solver options
@@ -53,7 +52,6 @@ class OptStoic(object):
                  add_loopless_constraints=True,
                  max_iteration=2,
                  pulp_solver=None,
-                 data_filepath=DATA_DIR,
                  result_filepath=None,
                  M=1000,
                  logger=None):
@@ -71,7 +69,6 @@ class OptStoic(object):
                 may contain loops).
             max_iteration (int, optional): The default maximum number of iteration
             pulp_solver (None, optional): A pulp.solvers object (load any of the user-defined solver)
-            data_filepath (TYPE, optional): Filepath for data
             result_filepath (str, optional): Filepath for result
             M (int, optional): The maximum flux bound (default 1000)
             logger (:obj:`logging.Logger`, optional): A logging.Logger object
@@ -91,11 +88,10 @@ class OptStoic(object):
         self.custom_flux_constraints = custom_flux_constraints
         self.M = M
 
-        self.varCat = 'Integer'
+        self._varCat = 'Integer'
         # self._varCat = 'Continuous'
 
         self.max_iteration = max_iteration
-        self.data_filepath = data_filepath
 
         if result_filepath is None:
             result_filepath = './result'
@@ -298,7 +294,7 @@ class OptStoic(object):
 
         # Fix nad(p)h production and consumption
         if self.custom_flux_constraints is not None:
-            self.logger.info("Custom constraints added for redox balance.")
+            self.logger.info("Adding custom constraints...")
 
             for group in self.custom_flux_constraints:
                 lp_prob += pulp.lpSum(v[rxn] for rxn in group['reactions']) <= group['UB'], "%s_UB"%group['constraint_name']
@@ -309,11 +305,19 @@ class OptStoic(object):
     def solve(self, exclude_existing_solution=False, outputfile="OptStoic_pulp_result.txt", max_iteration=None):
         """
         Solve OptStoic problem using pulp.solvers interface
-
-        Keyword Arguments:
-            outputfile: name of outpufile
-            max_iteration: Externally specified maximum number of pathway to be found using OpStoic.
-                            If not specified, it will set to the internal max iterations.
+        
+        Args:
+            exclude_existing_solution (bool, optional): If True, create and add integer cut constraints for pathways that 
+                are found using the same OptStoic instance, but solved in previous function call. 
+            outputfile (str, optional): name of outpufile
+            max_iteration (None, optional): Externally specified maximum number of pathway to be found using OpStoic.
+                If not specified, it will set to the internal max iterations.
+        
+        Returns:
+            TYPE: Description
+        
+        Raises:
+            ValueError: Description
         """
         if self.objective not in ['MinFlux', 'MinRxn']:
             raise ValueError("The objective for OptStoic is not correctly defined. Please use either 'MinFlux' or 'MinRxn'.")
@@ -350,7 +354,7 @@ class OptStoic(object):
             self.logger.info("Iteration %s", self.iteration)
             #lp_prob.writeLP("OptStoic.lp", mip=1)  #optional
             e1 = time.time()
-            lp_prob.solve(self.pulp_solver)
+            lp_prob.solve(solver=self.pulp_solver)
             e2 = time.time()
             self.logger.info("This iteration solved in %.3f seconds.", (e2-e1))
 
@@ -392,6 +396,7 @@ class OptStoic(object):
             # If a new optimal solution cannot be found, end the program
             else:
                 break
+
         result_output.close()
 
         self.lp_prob = lp_prob
@@ -422,9 +427,11 @@ class OptStoic(object):
         """
         self.pathways = {}
 
-    def solve_gurobi_cl(self, exclude_existing_solution=False,
+    def solve_gurobi_cl(self, 
+                        exclude_existing_solution=False,
                         outputfile="OptStoic_pulp_result_gcl.txt",
-                        max_iteration=None, cleanup=True,
+                        max_iteration=None,
+                        cleanup=True,
                         gurobi_options=GUROBI_OPTIONS):
         """
         Solve OptStoic problem using Gurobi command line (gurobi_cl)
@@ -553,15 +560,30 @@ if __name__ == '__main__':
 
     logger = create_logger(name='script.optstoic.main')
 
-    db3 = database.load_db_v3()
+    # Set the following reactions as allowable export reactions
+    db3 = database.load_db_v3(
+        user_defined_export_rxns_Sji = {
+            'EX_glc': {'C00031': -1.0},
+            'EX_nad': {'C00003': -1.0},
+            'EX_adp': {'C00008': -1.0},
+            'EX_phosphate': {'C00009': -1.0},
+            'EX_pyruvate': {'C00022': -1.0},
+            'EX_nadh': {'C00004': -1.0},
+            'EX_atp': {'C00002': -1.0},
+            'EX_h2o': {'C00001': -1.0},
+            'EX_hplus': {'C00080': -1.0},
+            'EX_nadp': {'C00006': -1.0},
+            'EX_nadph': {'C00005': -1.0}
+            }
+        )
 
-    logger.debug('Testing optstoic output filepath: %s', res_dir)
+    #logger.debug('Testing optstoic output filepath: %s', res_dir)
 
     pulp_solver = load_pulp_solver(
-        solver_names=['GLPK_CMD', 'GUROBI', 'GUROBI_CMD', 'CPLEX_CMD'],
+        solver_names=['SCIP_CMD', 'GLPK_CMD', 'GUROBI', 'GUROBI_CMD', 'CPLEX_CMD'],
         logger=logger)
 
-    # Generalize custom flux constraints:
+    # How to add custom flux constraints:
     # E.g.,
     # v('EX_nadph') + v('EX_nadh') = 2;
     # v('EX_nadp') + v('EX_nad') = -2;
@@ -611,7 +633,6 @@ if __name__ == '__main__':
                     add_loopless_constraints=True,
                     max_iteration=1,
                     pulp_solver=pulp_solver,
-                    data_filepath=DATA_DIR,
                     result_filepath='./result/',
                     M=1000,
                     logger=logger)

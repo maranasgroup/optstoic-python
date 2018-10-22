@@ -3,7 +3,7 @@
 Loopless OptStoic program to identify glycolytic pathway
 (glucose to pyruvate) for n ATP production.
 It read input files that are used for GAMS.
-Currently, it has been tested with GLPK, Gurobi and CPLEX solver.
+Currently, it has been tested with SCIP, GLPK, Gurobi and CPLEX solvers.
 
 Author: Chiam Yu
 
@@ -34,7 +34,6 @@ import json
 from optstoicpy.core import database
 from optstoicpy.script.utils import create_logger
 from optstoicpy.script.solver import load_pulp_solver
-from optstoicpy.script import DATA_DIR
 from gurobi_command_line_solver import *
 
 # Global variables/solver options
@@ -54,7 +53,6 @@ class OptStoic(object):
                  zlb=8,
                  max_iteration=2,
                  pulp_solver=None,
-                 data_filepath=DATA_DIR,
                  result_filepath=None,
                  M=1000,
                  logger=None):
@@ -67,7 +65,6 @@ class OptStoic(object):
             zlb (int, optional): The lowerbound on objective value z
             max_iteration (int, optional): The default maximum number of iteration
             pulp_solver (None, optional): A pulp.solvers object (load any of the user-defined solver)
-            data_filepath (TYPE, optional): Filepath for data
             result_filepath (str, optional): Filepath for result
             M (int, optional): The maximum flux bound (default 1000)
             logger (:obj:`logging.Logger`, optional): A logging.Logger object
@@ -89,7 +86,6 @@ class OptStoic(object):
             self._varCat = 'Continuous'
 
         self.max_iteration = max_iteration
-        self.data_filepath = data_filepath
 
         if result_filepath is None:
             result_filepath = './result'
@@ -560,7 +556,7 @@ if __name__ == '__main__':
 
     db3 = database.load_db_v3()
 
-    logger.debug('Testing optstoic output filepath: %s', res_dir)
+    #logger.debug('Testing optstoic output filepath: %s', res_dir)
 
     pulp_solver = load_pulp_solver(
         solver_names=['GLPK_CMD', 'GUROBI', 'GUROBI_CMD', 'CPLEX_CMD'],
@@ -572,12 +568,9 @@ if __name__ == '__main__':
                     zlb=10,
                     max_iteration=1,
                     pulp_solver=pulp_solver,
-                    data_filepath=DATA_DIR,
                     result_filepath='./result/',
                     M=1000,
                     logger=logger)
-
-    #test = OptStoic(nATP=2, objective='MinFlux', data_filepath=DATA_DIR, result_filepath=res_dir)
 
     if sys.platform == 'cygwin':
         lp_prob, pathways = test.solve_gurobi_cl(outputfile='test_optstoic_cyg.txt', cleanup=False)

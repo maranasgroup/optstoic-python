@@ -160,19 +160,19 @@ class Database(object):
         else:
             if verbose:
                 print "Reaction: {0} is ({1}) {2}".format(
-                    rid, self.rxntype[rid], REACTION_TYPE[self.rxntype[rid]]
+                    rid, self.rxntype[rid], REACTION_TYPE.get(self.rxntype[rid])
                 )
             return self.rxntype[rid]
 
     def set_reaction_type(self, rid, rxntype):
         try:
             t0 = self.rxntype[rid]
-            self.rxntype[r] = rxntype
+            self.rxntype[rid] = rxntype
         except KeyError:
-            self.logger.warning('Reaction %s not in database!' % r)
+            self.logger.error('Reaction %s not in database!' % rid)
         else:
             self.logger.info('Reaction %s has been updated from %s to %s.'
-                         % (r, REACTION_TYPE[t0], REACTION_TYPE[rtype])
+                         % (rid, REACTION_TYPE.get(t0), REACTION_TYPE.get(rxntype))
                          )
 
     def extend_S_from_file(self, filename='Sij_extension_for_glycolysis.txt'):
@@ -190,6 +190,7 @@ class Database(object):
                 if rxn not in self.reactions:
                     self.reactions.append(rxn)
                     temp_rxn.append(rxn)
+                    self.rxntype[rxn] = None
         return self.S, temp_rxn
 
     def set_database_export_reaction(self, export_reactions_Sij_dict):
