@@ -3,7 +3,7 @@ current_dir =  os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.normpath(os.path.join(current_dir,'../'))
 res_dir = os.path.join(current_dir,'test_results/')
 sys.path.append(parent_dir)
-from optstoicpy.script.optstoic import *
+from optstoicpy.script.optstoic_glycolysis import *
 from optstoicpy.core import database
 from optstoicpy.core.reaction import Reaction
 from optstoicpy.core.pathway import Pathway, generate_kegg_model

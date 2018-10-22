@@ -1,11 +1,15 @@
-# Author: Chiam Yu
-# Inspired by the Reaction class of cobrapy package
-# Reaction class
 from .config import rxnSji
 
-
 class Reaction(object):
-    """Reaction class"""
+    """Reaction class
+
+    Attributes:
+        equation (TYPE): Description
+        flux (TYPE): Description
+        metabolites (TYPE): Description
+        reversible (TYPE): Description
+        rid (TYPE): Description
+    """
 
     def __init__(self, rid=None, flux=1, metabolites={},
                  equation='', reversible=True):
@@ -90,17 +94,18 @@ class Reaction(object):
     @classmethod
     def create_Reaction_list_from_dict(cls, dataDict, excludeExchangeRxn=True):
         """
-        Make a list of Reaction object from dataDict,
-        excluding exchange reaction
+        Make a list of Reaction object from dataDict, excluding exchange reactions.
 
         E.g.
         dataDict = {'reaction_id': ['R00001', 'R00002'], 'flux': [-1, 1]}
         output = [Reaction('R00001'), Reaction('R00002')]
 
-        Keyword arguments:
-        dataDict -- dictionary with reaction_id and flux
-        excludeExchangeRxn -- Exclude all exchange reactions in the list
-                              (default true)
+        Args:
+            dataDict (TYPE): ictionary with reaction_id and flux
+            excludeExchangeRxn (bool, optional): Exclude all exchange reactions in the list. Default to True.
+
+        Returns:
+            TYPE: Description
         """
         RxnObjList = []
         for i in range(len(dataDict['reaction_id'])):

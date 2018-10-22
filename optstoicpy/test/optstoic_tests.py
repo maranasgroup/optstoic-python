@@ -11,7 +11,7 @@ from nose.tools import (
 from optstoicpy.core.database import (
     load_db_v3,
     Database)
-from optstoicpy.script.optstoic import (
+from optstoicpy.script.optstoic_glycolysis import (
     load_pulp_solver,
     OptStoic,
     DATA_DIR)
