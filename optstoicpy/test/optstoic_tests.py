@@ -19,26 +19,47 @@ import optstoicpy.script.optstoic_glycolysis as osgly
 import optstoicpy.script.optstoic as optstoic
 
 class TestOptStoic:
-    def setUp(self):
+    def setup(self):
+        self.logger = create_logger(name='Test generalized optstoic')
         self.DB = self.test_load_database()
-        self.pulp_solver = self.test_pulp_solver_loading()
+        self.pulp_solver = self.test_pulp_solver_loading()        
 
     def test_pulp_solver_loading(self):
+        self.logger.info("Test loading PuLP solver(s)")
+
         pulp_solver = load_pulp_solver(
-            solver_names=['SCIP_CMD', 'GUROBI_CMD', 'GLPK_CMD'])
+            solver_names=['SCIP_CMD', 'GUROBI', 'GUROBI_CMD', 'CPLEX_CMD', 'GLPK_CMD'])
         assert_not_equal(pulp_solver, None)
         return pulp_solver
 
     def test_load_database(self):
-        DB = load_db_v3()
-        assert_equal(len(DB.metabolites), 5969)
-        assert_equal(len(DB.reactions), 7175)
+        self.logger.info("Test loading Database")
 
+        user_defined_export_rxns_Sji = {
+            'EX_glc': {'C00031': -1.0},
+            'EX_nad': {'C00003': -1.0},
+            'EX_adp': {'C00008': -1.0},
+            'EX_phosphate': {'C00009': -1.0},
+            'EX_pyruvate': {'C00022': -1.0},
+            'EX_nadh': {'C00004': -1.0},
+            'EX_atp': {'C00002': -1.0},
+            'EX_h2o': {'C00001': -1.0},
+            'EX_hplus': {'C00080': -1.0},
+            'EX_nadp': {'C00006': -1.0},
+            'EX_nadph': {'C00005': -1.0}
+            }
+
+        DB = load_db_v3(
+            reduce_model_size=True,
+            user_defined_export_rxns_Sji=user_defined_export_rxns_Sji)
+        DB.validate()
+        # assert_equal(len(DB.metabolites), 5969)
+        # assert_equal(len(DB.reactions), 7175)
         return DB
 
     @nottest
     def test_optstoic_setup(self):
-        model = osgly.OptStoic(database=self.DB,
+        model = osgly.OptStoicGlycolysis(
                         objective='MinFlux',
                         nATP=1,
                         zlb=10,
@@ -51,9 +72,7 @@ class TestOptStoic:
             outputfile='test_optstoic.txt')
 
     @nottest
-    def test_general_optstoic_setup(self):
-
-        logger = create_logger(name='Test generalized optstoic ')
+    def test_general_optstoic_setup(self):        
 
         custom_flux_constraints = [
             {'constraint_name': 'nadphcons1',
@@ -95,7 +114,7 @@ class TestOptStoic:
                         pulp_solver=self.pulp_solver,
                         result_filepath='./result/',
                         M=1000,
-                        logger=logger)
+                        logger=self.logger)
 
         lp_prob, pathways = model.solve(
             outputfile='test_optstoic_general.txt')

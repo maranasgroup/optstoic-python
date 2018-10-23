@@ -26,7 +26,7 @@ def convert_set_to_list(filename):
     generate a list from gams set data file
     """
     f = open(filename, 'rU')
-    #remove quotes if begin and end is specified
+    # remove quotes if begin and end is specified
     # don't read in lines with gams comment "*"
     data = []
     for line in f.readlines():
@@ -153,39 +153,7 @@ if __name__ == '__main__':
 
     data_filepath = "data/"
 
-    """
-    old_imbalance_rxns = convert_set_to_list( os.path.join(data_filepath, 'inc_stoic.txt'))
-    new_imbalance_rxns = convert_set_to_list(os.path.join(data_filepath, 'inc_stoic_updated.txt'))
-    imbalanceH2O = convert_set_to_list(os.path.join(data_filepath, 'imbalance_oxygenH2O_reaction_20160526.txt'))
-    imbalanceO2 = convert_set_to_list(os.path.join(data_filepath, 'imbalance_oxygen_reaction_20160526.txt'))
-
-    A = set(old_imbalance_rxns)
-    B = set(new_imbalance_rxns)
-    revive = (A - B)
-
-    IH = set(imbalanceH2O)
-    IO = set(imbalanceO2)
-
-    target1 = revive & IH
-    target2 = revive & IO
-
-    target = list(target1 & target2)
-
-
-    g = open("h2o_imbalance_reactions.csv", 'w+')
-    writer = csv.writer(g)
-
-    for rxn in target:
-        robj = Reaction(rid=rxn, flux=1)
-        robj.autoset_metabolites()
-        robj.set_equation()
-        print robj.equation
-        writer.writerow([rxn, robj.equation])
-
-    g.close()
-
-    """
     ## rewrite reaction file
 
     all_rxn = convert_set_to_list( os.path.join(data_filepath, 'reactions_modified.txt'))
-    convert_set_to_list(all_rxn, 'reactions_modified_noquotes.txt')
+    #convert_set_to_list(all_rxn, 'reactions_modified_noquotes.txt')

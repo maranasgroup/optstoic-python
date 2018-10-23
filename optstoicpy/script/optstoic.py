@@ -408,10 +408,13 @@ class OptStoic(object):
         Add list of existing solutions (pathways) to be
         excluded from being identified.
 
-        Keyword Arguments:
-        user_defined_pathways -- pathways output from solve_gurobi_cl()
-                                 or solve() or pathway in dictionary format
-                                 e.g. {1: 'reaction_id': []}
+        Args:
+            user_defined_pathways (TYPE): pathways output from solve_gurobi_cl()
+                                     or solve() or pathway in dictionary format
+                                     e.g. {1: 'reaction_id': []}
+        
+        Raises:
+            ValueError: Description
         """
         if (isinstance(user_defined_pathways, dict) and
            ('reaction_id' in user_defined_pathways.values()[0])):
@@ -437,14 +440,23 @@ class OptStoic(object):
         Solve OptStoic problem using Gurobi command line (gurobi_cl)
         when pulp.solvers.GUROBI_CMD failed.
         Require the module "gurobi_command_line_solver.py".
-
-        Keyword Arguments:
-        exclude_existing_solution -- If true and if self.pathway is not None,
-                                    exclude the pathways from being identified.
-        outputfile -- name of outpufile
-        max_iteration -- Externally specified maximum number of pathway
-                         to be found using OpStoic. If not specified,
-                         it will set to the internal max iterations.
+        
+        Args:
+            exclude_existing_solution (bool, optional): If true and if self.pathway is not None,
+                exclude the pathways from being identified.
+            outputfile (str, optional): name of outpufile
+            max_iteration (None, optional): Externally specified maximum number of pathway
+                to be found using OpStoic. If not specified,
+                it will set to the internal max iterations.
+            cleanup (bool, optional): If True, delete the temporary .lp and .sol file. Set as
+                False for debugging. 
+            gurobi_options (TYPE, optional): Description
+        
+        Returns:
+            TYPE: Description
+        
+        Raises:
+            ValueError: Description
         """
         if self.objective not in ['MinFlux', 'MinRxn']:
             raise ValueError("The objective for OptStoic is not correctly "
@@ -562,6 +574,7 @@ if __name__ == '__main__':
 
     # Set the following reactions as allowable export reactions
     db3 = database.load_db_v3(
+        reduce_model_size=True,
         user_defined_export_rxns_Sji = {
             'EX_glc': {'C00031': -1.0},
             'EX_nad': {'C00003': -1.0},
@@ -580,7 +593,7 @@ if __name__ == '__main__':
     #logger.debug('Testing optstoic output filepath: %s', res_dir)
 
     pulp_solver = load_pulp_solver(
-        solver_names=['SCIP_CMD', 'GLPK_CMD', 'GUROBI', 'GUROBI_CMD', 'CPLEX_CMD'],
+        solver_names=['SCIP_CMD', 'GUROBI', 'GUROBI_CMD', 'CPLEX_CMD', 'GLPK_CMD'],
         logger=logger)
 
     # How to add custom flux constraints:

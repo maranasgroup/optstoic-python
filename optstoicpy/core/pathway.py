@@ -3,13 +3,7 @@ from .reaction import Reaction
 from .config import cofactors, default_params, rxnSji
 import os
 from collections import OrderedDict
-
-"""
-Todo:
-Change reaction_ids and fluxes to read_only list.
-Can only update them using function.
-
-"""
+from optstoicpy.script.utils import create_logger
 
 
 class Pathway(object):
@@ -24,7 +18,8 @@ class Pathway(object):
                  sourceSubstrateID='C00031', 
                  endSubstrateID='C00022',
                  total_flux_no_exchange=None, 
-                 note={}):
+                 note={},
+                 logger=None):
         """
         A Pathway instance can be initialized by either
             (a) List of reaction_ids and fluxes (Let reactions = None)
@@ -42,10 +37,13 @@ class Pathway(object):
             total_flux_no_exchange (None, optional): Sum of absolute flux through the pathway (Exclude export reactions)
             note (dict, optional): (For debugging purpose) modelstat and solvestat can be added
         """
+        if logger is None:
+            self.logger = create_logger('core.Pathway')
+        else:
+            self.logger = logger
         self.id = id
         self.name = name
-        self.note = note
-        self.total_flux_no_exchange = total_flux_no_exchange
+        self.note = note        
 
         # Iniatilize pathway object using list of reaction_ids and fluxes
         if reactions is None:
@@ -72,9 +70,12 @@ class Pathway(object):
 
         self.reaction_ids_no_exchange = [r for r in reaction_ids if 'EX_' not in r]
 
-        if not self.total_flux_no_exchange:
+        if not total_flux_no_exchange:
             self.total_flux_no_exchange = sum(map(
                 abs, [r.flux for r in self.reactions]))
+        else:
+            self.total_flux_no_exchange = total_flux_no_exchange
+
 
         self.rxn_flux_dict = dict(zip(self.reaction_ids, self.fluxes))
 
@@ -295,43 +296,3 @@ C_RANGE\t\t{C_RANGE[0]:.0e} {C_RANGE[1]:.0e}\n""".format(**params)
         filehandle.write(modeltext)
 
     return modeltext
-
-
-def test():
-    testpathway = {'flux': [-1.0, 1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0,
-                            1.0, 1.0, -1.0, -1.0, -1.0, -1.0, 2.0, 1.0,
-                            1.0, 1.0, -1.0, 1.0],
-                   'iteration': 1,
-                   'reaction_id': ['R00200', 'R00300', 'R00658', 'R01059',
-                                   'R01063', 'R01512', 'R01518', 'R01519',
-                                   'R01538', 'R08570', 'EX_glc', 'EX_nad',
-                                   'EX_adp', 'EX_phosphate', 'EX_pyruvate',
-                                   'EX_nadh', 'EX_atp', 'EX_h2o', 'EX_nadp',
-                                   'EX_nadph']}
-
-    p1 = Pathway(id=1, name='OptStoic',
-                 reaction_ids=testpathway['reaction_id'],
-                 fluxes=testpathway['flux'])
-    p1.rearrange_reaction_order()
-
-    outputFilename = 'OptStoic'
-    print "INFO: Creating 'res' folder in the current directory if not exist..."
-    outputFilepath = 'res'
-
-    try:
-        os.makedirs(outputFilepath)
-    except OSError:
-        if not os.path.isdir(outputFilepath):
-            raise
-
-    f = open(os.path.join(outputFilepath,
-                          outputFilename + '.txt'), 'a+')
-    kegg_model_text = generate_kegg_model(p1, filehandle=f)
-    print kegg_model_text
-    f.close()
-    print "Testing Pathway.py: Pass\n"
-    return 1
-
-
-if __name__ == "__main__":
-    test()
