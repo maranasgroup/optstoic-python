@@ -18,42 +18,33 @@ from optstoicpy.core.drawpathway import (
 class TestDrawPathway:
     def setup(self):
         self.logger = create_logger(name='Test core.drawpathway')
+        self.pathway_fixture = {'flux': [-1.0, 1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0,
+                                1.0, 1.0, -1.0, -1.0, -1.0, -1.0, 2.0, 1.0,
+                                1.0, 1.0, -1.0, 1.0],
+                                   'iteration': 1,
+                                   'reaction_id': ['R00200', 'R00300', 'R00658', 'R01059',
+                                                   'R01063', 'R01512', 'R01518', 'R01519',
+                                                   'R01538', 'R08570', 'EX_glc', 'EX_nad',
+                                                   'EX_adp', 'EX_phosphate', 'EX_pyruvate',
+                                                   'EX_nadh', 'EX_atp', 'EX_h2o', 'EX_nadp',
+                                                   'EX_nadph']}
+
+        self.p1 = Pathway(id=1, 
+                     name='OptStoic_pathway',
+                     reaction_ids=self.pathway_fixture['reaction_id'],
+                     fluxes=self.pathway_fixture['flux'])
 
     def test_draw_pathway(self):
-        # Sample input
-        reaction_list = [
-         'R00200',
-         'R00217',
-         'R00299',
-         'R00346',
-         'R00658',
-         'R00764',
-         'R00771',
-         'R01015',
-         'R01061',
-         'R01068',
-         'R01512',
-         'R01514',
-         'R01748'
-         ]
-
-        fluxes = [-1, 1, 1, -1, 2, 1, 1, -1, 2, 1, -2, -2, -2]
-
-        test_pathway = Pathway(name='EMP_pathway',
-                            reaction_ids=reaction_list,
-                            fluxes=fluxes)
-
         # Create png image
-        draw_pathway(test_pathway,
-            imageFileName='test_EMP_pathway',
+        draw_pathway(self.p1,
+            imageFileName='test_pathway',
             imageFormat='png',
-            graphTitle=test_pathway.name,
+            graphTitle=self.p1.name,
             cleanup=True,
             darkBackgroundMode=False)
 
-        fname = 'test_EMP_pathway.png'
-
+        fname = 'test_pathway.png'
         assert_equal(os.path.exists(fname), True)
 
-        if os.path.exists(fname):
-            os.remove(fname)
+        # if os.path.exists(fname):
+        #     os.remove(fname)
