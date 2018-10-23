@@ -25,10 +25,9 @@ import random
 import string  # to generate random hex code
 import pulp
 # import cPickle as pickle
-import gams_parser
 import json
 #import pdb
-from optstoicpy.core import database
+from optstoicpy.core.database import load_db_v3
 from optstoicpy.script.utils import create_logger
 from optstoicpy.script.solver import load_pulp_solver
 from gurobi_command_line_solver import *
@@ -567,13 +566,15 @@ class OptStoic(object):
         return "<OptStoic(objective='%s')>" % (self.objective)
 
 
-
-if __name__ == '__main__':
-
+def test():
+    """Replaces the nosetest due to issue with PULP/SCIP_CMD
+    """
     logger = create_logger(name='script.optstoic.main')
 
+    logger.info("Test generalized optstoic")
+
     # Set the following reactions as allowable export reactions
-    db3 = database.load_db_v3(
+    db3 = load_db_v3(
         reduce_model_size=True,
         user_defined_export_rxns_Sji = {
             'EX_glc': {'C00031': -1.0},
@@ -658,3 +659,9 @@ if __name__ == '__main__':
         lp_prob, pathways = test.solve(outputfile='test_optstoic.txt')
         #test.max_iteration = test.max_iteration + 1
         #lp_prob, pathways = test.solve(outputfile='test_optstoic.txt', exclude_existing_solution=True)
+
+    return lp_prob, pathways
+
+if __name__ == '__main__':
+    lp_prob, pathways = test()
+

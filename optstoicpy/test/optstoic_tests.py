@@ -71,6 +71,8 @@ class TestOptStoic:
         lp_prob, pathways = model.solve(
             outputfile='test_optstoic.txt')
 
+        assert_equal(pathways[1]['modelstat'], 'Optimal')
+
     @nottest
     def test_general_optstoic_setup(self):        
 

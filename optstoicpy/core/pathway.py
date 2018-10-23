@@ -184,10 +184,6 @@ class Pathway(object):
             {'reaction_id': sortedRxnUnique, 'flux': sortedRxnFlux})
         return self
 
-    def __repr__(self):
-        return "<OptStoicPathway(id='%s', numRxn='%s', nATP='%s')>" % (
-            self.id, len(self.reaction_ids), self.nATP)
-
     # @staticmethod
     def get_pathway_similarity_index(self, pathway2):
         """Calculate the jaccard index of two pathways"""
@@ -225,6 +221,10 @@ class Pathway(object):
                                 solvestat=p.get_solvestat())
 
         return output
+
+    def __repr__(self):
+        return "<OptStoicPathway(id='%s', numRxn='%s', nATP='%s')>" % (
+            self.id, len(self.reaction_ids), self.nATP)
 
 # ----------------------------------------------------------------------------
 

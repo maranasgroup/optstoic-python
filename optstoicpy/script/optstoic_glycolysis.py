@@ -138,10 +138,10 @@ class OptStoicGlycolysis(OptStoic):
         return "<OptStoicGlycolysis(nATP='%s', objective='%s')>" % (self.nATP, self.objective)
 
 
-if __name__ == '__main__':
-
+def test_optstoic_glycolysis():
     logger = create_logger(name='script.optstoic_glycolysis.main')
     #logger.debug('Testing optstoic output filepath: %s', res_dir)
+    logger.info("Test optstoic_glycolysis")
 
     pulp_solver = load_pulp_solver(
         solver_names=['SCIP_CMD', 'GUROBI', 'GUROBI_CMD', 'CPLEX_CMD', 'GLPK_CMD'],
@@ -150,7 +150,7 @@ if __name__ == '__main__':
     test = OptStoicGlycolysis(
                     objective='MinFlux',
                     nATP=1,
-                    zlb=10,
+                    zlb=10, # setting this may slow down the optimization, but integer cut constraints will work
                     max_iteration=1,
                     pulp_solver=pulp_solver,
                     result_filepath='./result/',
@@ -165,3 +165,10 @@ if __name__ == '__main__':
         lp_prob, pathways = test.solve(outputfile='test_optstoic.txt')
         #test.max_iteration = test.max_iteration + 1
         #lp_prob, pathways = test.solve(outputfile='test_optstoic.txt', exclude_existing_solution=True)
+
+    return lp_prob, pathways
+
+if __name__ == '__main__':
+    lp_prob, pathways = test_optstoic_glycolysis()
+
+
