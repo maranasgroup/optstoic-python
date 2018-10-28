@@ -77,7 +77,7 @@ class Database(object):
         self.all_excluded_reactions = []
         self.excluded_reactions = dbdict_gams.get('excluded_reactions_list') or []
         self.user_defined_export_rxns = []
-        self.blocked_rxns = []
+        self.blocked_rxns = None
         self.reduce_model_size = reduce_model_size
 
     def load(self):
@@ -125,6 +125,8 @@ class Database(object):
             self.blocked_rxns = gams_parser.convert_set_to_list(
                 os.path.join(self.data_filepath, self.dbdict_gams['blocked_rxns'])
             )
+        else:
+            self.blocked_rxns = []
 
         self.all_excluded_reactions = list(
             set(self.excluded_reactions + self.blocked_rxns)
@@ -148,6 +150,11 @@ class Database(object):
             self.validate()
 
     def validate(self):
+        """Validate the S matrix, the reaction vector and the reaction type vector.
+        
+        Raises:
+            Exception: Description
+        """
         self.logger.info("Validating database")
 
         if set(self.Sji.keys()) != set(self.reactions):

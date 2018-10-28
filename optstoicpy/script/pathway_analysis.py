@@ -15,20 +15,24 @@ import copy, os
 def get_pathway_identity_matrix(pathwayObjList, symmetry=True):
     """
     Matrix[i][j] = 1 if pathway i and pathway j are identical, otherwise 0.
+    
     Arguments:
-        pathwayObjList -- A list of pathway objects
-        symmetry --- Return a full matrix if True, else return only upper triangular matrix.
-
+        pathwayObjList (TYPE): A list of pathway objects
+        symmetry (bool, optional): If True, return a full matrix. If False, return only upper triangular matrix.
+    
+    Returns:
+        TYPE: Description
+    
     """
     nr = len(pathwayObjList)
 
-    #calculate identity score between the two different set of pathways
+    # calculate identity score between the two different set of pathways
     similarity_mat = np.identity(nr)
     for i in range(nr):
         for j in range(i+1, nr):
             similarity_mat[i][j] = pathwayObjList[i].is_same_pathway_with(pathwayObjList[j])
 
-    #Fill the lower triangular matrix with the same value
+    # Fill the lower triangular matrix with the same value
     if symmetry:
         similarity_mat = similarity_mat + similarity_mat.T - np.diag(similarity_mat.diagonal())
 
@@ -37,13 +41,17 @@ def get_pathway_identity_matrix(pathwayObjList, symmetry=True):
 def get_unique_pathways_from_list(pathwayObjList, update_unique_id=True, sort_by_total_flux=False, debug=False):
     """
     return a set of unique pathways (obj) from a list of Pathway objects
+    
     Arguments:
-        pathwayObjList -- list of pathway objects
-        update_unique_id -- change the ID to unique id (default True)
-        sort_by_total_flux -- sort the unique pathways by total flux (default False)
-        debug -- output a data index to unique pathway id mapping dictionary (default False)
-
-    Note: Currently, "debug=True" does not work with "sort_by_total_flux=True"
+        pathwayObjList (TYPE): list of pathway objects
+        update_unique_id (bool, optional): change the ID to unique id (default True)
+        sort_by_total_flux (bool, optional): sort the unique pathways by total flux (default False)
+        debug (bool, optional): output a data index to unique pathway id mapping dictionary (default False)
+    
+        Note: Currently, "debug=True" does not work with "sort_by_total_flux=True"
+    
+    Returns:
+        TYPE: Description
     """
 
     similarity_mat = get_pathway_identity_matrix(pathwayObjList, symmetry=False)
@@ -228,25 +236,6 @@ def draw_selected_pathways(pathway_set, outputFilePath, selected_ids=[],
 
     return 1
 
-# def draw_selected_pathways_ranked(pathway_set, outputFilePath, selected_ids=[],
-#                             file_prefix='selected_pathway_',
-#                             imageFormat='png', darkBackgroundMode=False):
-#     """Draw all the pathway given a list of pathway objects
-#     Arguments:
-#     pathway_set  --  a list of pathway objects
-#     outputFilePath -- output file path
-#     cutoff - id cutoff for drawing pathway
-#     """
-#     print "Drawing all selected pathways. Be patient..."
-#     for p in pathway_set:
-#         if p.id in selected_ids:
-#             graph_title = "Final_{0}_P{1}".format(p.name, p.id)
-#             draw_pathway(p, os.path.join(outputFilePath, file_prefix+'{0:03d}'.format(p.id)),
-#                         imageFormat=imageFormat, graphTitle=graph_title, cleanup=True, darkBackgroundMode=darkBackgroundMode)
-#     print "Done!"
-
-#     return 1
-
 def extract_pathway_set(pathway_set, selected_ids=[]):
     new_set = []
     for p in pathway_set:
@@ -301,6 +290,7 @@ def draw_combined_pathway(combined_reactions, fileName):
 
 
 if __name__ == '__main__':
+    pass
 
     nATP = 1
     outputpath = './{0}ATP_final'.format(nATP)
@@ -343,44 +333,3 @@ if __name__ == '__main__':
 
     #draw_all_pathways(all_unique_pathways, outputpath, cutoff=600)
     """
-
-    all_unique_pathways = pickle.load(open(os.path.join(outputpath, '{0}ATP_all_pathways.pkl'.format(nATP)), 'r'))
-
-    #Drawing selected pathways
-    topIDs05 = [ 18, 4, 35, 15, 13, 11, 73, 57, 27, 5 ]
-
-    topIDs1 = [ 25, 9, 14, 27, 22, 2, 13, 24, 18, 15]
-    topIDs15 = [ 468, 564, 290, 236, 537, 378, 577, 490, 525, 448 ]
-
-    topIDs2 = [49, 22, 32, 58, 147, 280, 125, 124, 158, 141]
-
-    topIDs25 = [ 515, 127, 117, 86, 108, 133, 571, 279, 161, 20 ]
-
-    topIDs3 = [ 137, 113, 13, 87, 21, 186, 30, 168, 435, 73 ]
-
-    ATP_topIDs = { 0.5: topIDs05, 1: topIDs1,  1.5: topIDs15,
-                    2: topIDs2, 2.5: topIDs25, 3: topIDs3 }
-
-    selected_pathways = extract_pathway_set(all_unique_pathways, selected_ids=ATP_topIDs[nATP])
-
-    #-------------------begin: drawing combined pathways -------------
-    # reactions_in_selected_pathways = combine_multiple_pathways(selected_pathways)
-    # draw_combined_pathway(reactions_in_selected_pathways, 'Final_combined/{0}ATP_combined_top_10'.format(nATP))
-
-    select_pathway_dir = os.path.join(outputpath, 'selected_pathways')
-    # make_dir_if_not_exist(select_pathway_dir)
-    #draw_selected_pathways(all_unique_pathways, select_pathway_dir, selected_ids=ATP_topIDs[nATP])
-    draw_selected_pathways(all_unique_pathways, select_pathway_dir, selected_ids=ATP_topIDs[nATP] + [336, 200,268])
-
-    #draw_selected_pathways(all_unique_pathways, select_pathway_dir, selected_ids=[367])
-
-    #------------------- end: drawing combined pathways -------------
-
-
-    #------------------- generate keggmodel for selected top pathways -------------
-    # f = open('top_%s_ATP_kegg_models_no_ratio.txt'%nATP, 'w+')
-    # for p in selected_pathways:
-    #     generate_kegg_model(p, filehandle=f, add_ratio_constraints=False)
-    # f.close()
-    #------------------- end -----------------------
-
