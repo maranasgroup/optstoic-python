@@ -1,11 +1,11 @@
 """Credit: https://github.com/pypa/sampleproject"""
 from setuptools import setup, find_packages
 from codecs import open
-from os import path
+import os
 
-here = path.abspath(path.dirname(__file__))
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
-with open(path.join(here, 'README.MD'), encoding='utf-8') as f:
+with open(os.path.join(current_dir, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
@@ -35,7 +35,7 @@ setup(
     install_requires=[ 'pandas>=0.18.0',
                        #'scipy>=0.17.0',
                        #'numpy>=1.11.1',
-                       'json>=2.0.9',
+                       'sympy',
                        'graphviz>=0.4.8',
                        'PuLP>=1.6.1'],
 

@@ -123,6 +123,12 @@ class Pathway(object):
         else:
             return None
 
+    def get_time(self):
+        if 'time' in self.note:
+            return self.note['time']
+        else:
+            return None
+
     def get_reaction_involving_reactant(self, substrate_ID):
         """get reactions that involve reactant substrate_ID"""
         output = []
@@ -207,6 +213,14 @@ class Pathway(object):
         else:
             return 0
 
+    def to_dict(self):
+        return dict(pathway=self.get_pathway_dict(),
+            num_reaction=len(self.reaction_ids),
+            total_flux_no_exchange=self.get_total_flux_no_exchange(),
+            modelstat=self.get_modelstat(),
+            solvestat=self.get_solvestat(),
+            time=self.get_time())
+
     @staticmethod
     def pathways_to_dict(list_of_pathways):
         """
@@ -214,11 +228,7 @@ class Pathway(object):
         """
         output = {}
         for p in list_of_pathways:
-            output[p.id] = dict(pathway=p.get_pathway_dict(),
-                                num_reaction=len(p.reaction_ids),
-                                total_flux_no_exchange=p.get_total_flux_no_exchange(),
-                                modelstat=p.get_modelstat(),
-                                solvestat=p.get_solvestat())
+            output[p.id] = p.to_dict()
 
         return output
 

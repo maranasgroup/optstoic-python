@@ -28,21 +28,23 @@ from gurobi_command_line_solver import *
 
 class OptStoicGlycolysis(OptStoic):
 
+    EXPORT_RXNS_SJI = {
+        'EX_glc': {'C00031': -1.0},
+        'EX_nad': {'C00003': -1.0},
+        'EX_adp': {'C00008': -1.0},
+        'EX_phosphate': {'C00009': -1.0},
+        'EX_pyruvate': {'C00022': -1.0},
+        'EX_nadh': {'C00004': -1.0},
+        'EX_atp': {'C00002': -1.0},
+        'EX_h2o': {'C00001': -1.0},
+        'EX_hplus': {'C00080': -1.0},
+        'EX_nadp': {'C00006': -1.0},
+        'EX_nadph': {'C00005': -1.0}
+        }
+
     DBV3 = database.load_db_v3(
         reduce_model_size=True,
-        user_defined_export_rxns_Sji = {
-            'EX_glc': {'C00031': -1.0},
-            'EX_nad': {'C00003': -1.0},
-            'EX_adp': {'C00008': -1.0},
-            'EX_phosphate': {'C00009': -1.0},
-            'EX_pyruvate': {'C00022': -1.0},
-            'EX_nadh': {'C00004': -1.0},
-            'EX_atp': {'C00002': -1.0},
-            'EX_h2o': {'C00001': -1.0},
-            'EX_hplus': {'C00080': -1.0},
-            'EX_nadp': {'C00006': -1.0},
-            'EX_nadph': {'C00005': -1.0}
-            }
+        user_defined_export_rxns_Sji=EXPORT_RXNS_SJI
         )
 
     CUSTOM_REDOX_CONSTRAINTS = [

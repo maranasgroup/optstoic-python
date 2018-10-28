@@ -23,11 +23,12 @@ import sys
 import copy
 import random
 import string  # to generate random hex code
+import json
 import pulp
 # import cPickle as pickle
-import json
 #import pdb
 from optstoicpy.core.database import load_db_v3
+from optstoicpy.core.pathway import Pathway
 from optstoicpy.script.utils import create_logger
 from optstoicpy.script.solver import load_pulp_solver
 from gurobi_command_line_solver import *
@@ -38,8 +39,9 @@ GUROBI_OPTIONS = 'Threads=2 TimeLimit=1800 MIPGapAbs=1e-6 MIPGap=1e-6 CliqueCuts
 
 
 class OptStoic(object):
-    """An OptStoic problem Class to identify pathways
-        using either minFlux or minRxn algorithm.
+    """
+    An OptStoic problem Class to identify pathways
+    using either minFlux or minRxn algorithm.
     """
 
     def __init__(self,
@@ -60,17 +62,24 @@ class OptStoic(object):
             objective (str, optional): The mode for optStoic pathway prospecting.
                 Options available are: ['MinFlux', 'MinRxn']
             zlb (int, optional): The lowerbound on objective value z. If not provided,
-                the integer cut constraints may not work properly when the objective value increases.
+                the integer cut constraints may not work properly when the objective value
+                increases.
             specific_bounds (dict, optional): LB and UB for exchange reactions which defined the
                 overall pathway equations. E.g. {'Ex_glc': {'LB': -1, 'UB':-1}}
+            custom_flux_constraints (dict, optional): The custom constraints that need to be 
+                added to the model formulation.
             add_loopless_constraints (bool, optional): If True, use loopless constraints.
                 If False, run optStoic without loopless constraint (faster, but the pathway
                 may contain loops).
             max_iteration (int, optional): The default maximum number of iteration
-            pulp_solver (None, optional): A pulp.solvers object (load any of the user-defined solver)
+            pulp_solver (None, optional): A pulp.solvers object (load any of the user-defined
+                solver)
             result_filepath (str, optional): Filepath for result
             M (int, optional): The maximum flux bound (default 1000)
             logger (:obj:`logging.Logger`, optional): A logging.Logger object
+        
+        Raises:
+            Exception: Description
         """
         if logger is None:
             self.logger = create_logger(name='optstoic.OptStoic')
@@ -96,8 +105,9 @@ class OptStoic(object):
             result_filepath = './result'
         self.result_filepath = result_filepath
 
-        if not os.path.exists(result_filepath):
-            os.makedirs(result_filepath)
+        if not os.path.exists(self.result_filepath):
+            self.logger.warning("A folder %s is created!"%self.result_filepath)
+            os.makedirs(self.result_filepath)
 
         self.database = database
         self.pathways = {}
@@ -306,11 +316,12 @@ class OptStoic(object):
         Solve OptStoic problem using pulp.solvers interface
         
         Args:
-            exclude_existing_solution (bool, optional): If True, create and add integer cut constraints for pathways that 
-                are found using the same OptStoic instance, but solved in previous function call. 
+            exclude_existing_solution (bool, optional): If True, create and add integer cut
+                constraints for pathways that are found using the same OptStoic instance,
+                but solved in previous function call.
             outputfile (str, optional): name of outpufile
-            max_iteration (None, optional): Externally specified maximum number of pathway to be found using OpStoic.
-                If not specified, it will set to the internal max iterations.
+            max_iteration (None, optional): Externally specified maximum number of pathway to be
+                found using OpStoic. If not specified, it will set to the internal max iterations.
         
         Returns:
             TYPE: Description
@@ -335,23 +346,21 @@ class OptStoic(object):
                                  'iteration. Increase max_iteration '
                                  'before solving!')
 
-            for ind, entry in self.pathways.iteritems():
-                rxnlist = list(set(entry['reaction_id']) -
-                               set(self.database.user_defined_export_rxns))
+            for ind, pathway in self.pathways.iteritems():
+                rxnlist = list(set(pathway.reaction_ids_no_exchange))
                 condition = pulp.lpSum(
                     [(1 - yf[j] - yb[j]) for j in rxnlist]) >= 1
                 lp_prob += condition, "IntegerCut_%d" % ind
 
-
         self.logger.info("Solving problem...")
-        if self.iteration == 1:
-            result_output = open(os.path.join(self.result_filepath, outputfile),"w+")
-        else:
-            result_output = open(os.path.join(self.result_filepath, outputfile),"a+")
+        # if self.iteration == 1:
+        #     result_output = open(os.path.join(self.result_filepath, outputfile), "w+")
+        # else:
+        #     result_output = open(os.path.join(self.result_filepath, outputfile), "a+")
 
         while True and self.iteration <= max_iteration:
             self.logger.info("Iteration %s", self.iteration)
-            #lp_prob.writeLP("OptStoic.lp", mip=1)  #optional
+            #lp_prob.writeLP("OptStoic.lp", mip=1)  # optional
             e1 = time.time()
             lp_prob.solve(solver=self.pulp_solver)
             e2 = time.time()
@@ -360,9 +369,8 @@ class OptStoic(object):
             # The solution is printed if it was deemed "optimal
             if pulp.LpStatus[lp_prob.status] == "Optimal":
                 self.logger.info("Writing result to output file...")
-                result_output.write("\nIteration no.: %d\n" %self.iteration)
-                result_output.write("\nModelstat: %s\n" %pulp.LpStatus[lp_prob.status])
-
+                # result_output.write("\nIteration no.: %d\n" %self.iteration)
+                # result_output.write("\nModelstat: %s\n" %pulp.LpStatus[lp_prob.status])
                 res = {}
                 res['reaction_id'] = []
                 res['flux'] = []
@@ -375,15 +383,24 @@ class OptStoic(object):
                         if v[j].varValue > EPS or v[j].varValue < -EPS:
                             res['reaction_id'].append(j)
                             res['flux'].append(v[j].varValue)
-                            result_output.write("%s %.8f\n" %(v[j].name, v[j].varValue))
+                #             result_output.write("%s %.8f\n" %(v[j].name, v[j].varValue))
 
-                result_output.write("%s = %.8f\n" % (self.objective, pulp.value(lp_prob.objective)))
-                result_output.write("----------------------------------\n\n")
+                # result_output.write("%s = %.8f\n" % (self.objective, pulp.value(lp_prob.objective)))
+                # result_output.write("----------------------------------\n\n")
 
                 integer_cut_reactions = list(set(res['reaction_id']) - set(self.database.user_defined_export_rxns))
 
-                self.pathways[self.iteration] = res
-                json.dump(self.pathways, open(os.path.join(self.result_filepath,'temp_pathways.json'),'w+'), sort_keys=True, indent=4)
+                self.pathways[self.iteration] = Pathway(
+                    id=self.iteration,
+                    name='Pathway_{:03d}'.format(self.iteration),
+                    reaction_ids=res['reaction_id'],
+                    fluxes=res['flux'],
+                    sourceSubstrateID='C00031', 
+                    endSubstrateID='C00022',
+                    note=res
+                    )
+
+                self.write_pathways_to_json(json_filename="temp_pathways.json")
 
                 # Integer cut constraint is added so that
                 # the same solution cannot be returned again
@@ -396,32 +413,40 @@ class OptStoic(object):
             else:
                 break
 
-        result_output.close()
+        #result_output.close()
 
         self.lp_prob = lp_prob
 
         return self.lp_prob, self.pathways
 
+    def write_pathways_to_json(self, json_filename="temp_pathways.json"): 
+
+        temp = {}
+        for k in self.pathways.keys(): 
+            temp[k] = self.pathways[k].to_dict()
+
+        json.dump(temp,
+                  open(os.path.join(self.result_filepath, json_filename), 'w+'),
+                  sort_keys=True,
+                  indent=4)
+
     def add_existing_pathways(self, user_defined_pathways):
         """
-        Add list of existing solutions (pathways) to be
+        Add list of existing solutions (Pathways) to be
         excluded from being identified.
 
         Args:
             user_defined_pathways (TYPE): pathways output from solve_gurobi_cl()
-                                     or solve() or pathway in dictionary format
-                                     e.g. {1: 'reaction_id': []}
+                                     or solve() 
         
         Raises:
             ValueError: Description
         """
-        if (isinstance(user_defined_pathways, dict) and
-           ('reaction_id' in user_defined_pathways.values()[0])):
+        if (isinstance(user_defined_pathways, dict) and (
+                isinstance(user_defined_pathways.values()[0], Pathway))):
             self.pathways = copy.deepcopy(user_defined_pathways)
         else:
-            raise ValueError("user_defined_pathways must be a "
-                             "pathways dictionary "
-                             "{1: 'reaction_id': ['R00001', 'R00002']}")
+            raise ValueError("user_defined_pathways must be a dictionary of Pathway instances")
 
     def reset_pathways(self):
         """
@@ -479,9 +504,8 @@ class OptStoic(object):
                                  'iteration. Increase max_iteration '
                                  'before solving!')
 
-            for ind, entry in self.pathways.iteritems():
-                rxnlist = list(set(entry['reaction_id']) -
-                               set(self.database.user_defined_export_rxns))
+            for ind, pathway in self.pathways.iteritems():
+                rxnlist = list(set(pathway.reaction_ids_no_exchange))
                 condition = pulp.lpSum(
                     [(1 - yf[j] - yb[j]) for j in rxnlist]) >= 1
                 lp_prob += condition, "IntegerCut_%d" % ind
@@ -489,12 +513,12 @@ class OptStoic(object):
         # Solve problem
         self.logger.info("Solving problem...")
 
-        if self.iteration == 1:
-            result_output = open(os.path.join(
-                self.result_filepath, outputfile), "w+")
-        else:
-            result_output = open(os.path.join(
-                self.result_filepath, outputfile), "a+")
+        # if self.iteration == 1:
+        #     result_output = open(os.path.join(
+        #         self.result_filepath, outputfile), "w+")
+        # else:
+        #     result_output = open(os.path.join(
+        #         self.result_filepath, outputfile), "a+")
 
         while True and self.iteration <= max_iteration:
             self.logger.info("Iteration %s", self.iteration)
@@ -517,8 +541,8 @@ class OptStoic(object):
                 res['modelstat'] = lp_status
                 res['solvestat'] = solver_message
 
-                result_output.write("\nIteration no.: %d\n" %self.iteration)
-                result_output.write("\nModelstat: %s\n" %lp_status)
+                # result_output.write("\nIteration no.: %d\n" %self.iteration)
+                # result_output.write("\nModelstat: %s\n" %lp_status)
 
                 for j in self.database.reactions:
                     if 'v_'+j in varValue:
@@ -526,18 +550,24 @@ class OptStoic(object):
                         if v > EPS or v < -EPS :
                             res['reaction_id'].append(j)
                             res['flux'].append(v)
-                            result_output.write("%s %.8f\n" %(j, v))
+                            #result_output.write("%s %.8f\n" %(j, v))
 
-                result_output.write("%s = %.8f\n" %(self.objective, objective_function))
-                result_output.write("----------------------------------\n\n")
+                # result_output.write("%s = %.8f\n" %(self.objective, objective_function))
+                # result_output.write("----------------------------------\n\n")
 
                 integer_cut_reactions = list(set(res['reaction_id']) - set(self.database.user_defined_export_rxns))
 
-                self.pathways[self.iteration] = res
+                self.pathways[self.iteration] = Pathway(
+                    id=self.iteration,
+                    name='Pathway_{:03d}'.format(self.iteration),
+                    reaction_ids=res['reaction_id'],
+                    fluxes=res['flux'],
+                    sourceSubstrateID='C00031', 
+                    endSubstrateID='C00022',
+                    note=res
+                    )
                 # Keep a copy of pathways in case program terminate midway
-                json.dump(self.pathways, open(os.path.join(
-                    self.result_filepath, 'temp_pathways.json'), 'w+'),
-                    sort_keys=True, indent=4)
+                self.write_pathways_to_json(json_filename="temp_pathways.json")
 
                 # Integer cut constraint is added so that
                 # the same solution cannot be returned again
@@ -550,7 +580,7 @@ class OptStoic(object):
             else:
                 break
 
-        result_output.close()
+        #result_output.close()
         # Clean up directory
         if cleanup:
             self.logger.debug("Cleaning up directory...")
@@ -566,8 +596,8 @@ class OptStoic(object):
         return "<OptStoic(objective='%s')>" % (self.objective)
 
 
-def test():
-    """Replaces the nosetest due to issue with PULP/SCIP_CMD
+def test_optstoic():
+    """An alternative to the nosetest due to issue with PULP/SCIP_CMD
     """
     logger = create_logger(name='script.optstoic.main')
 
@@ -645,7 +675,7 @@ def test():
                     specific_bounds=specific_bounds,
                     custom_flux_constraints=custom_flux_constraints,
                     add_loopless_constraints=True,
-                    max_iteration=1,
+                    max_iteration=2,
                     pulp_solver=pulp_solver,
                     result_filepath='./result/',
                     M=1000,

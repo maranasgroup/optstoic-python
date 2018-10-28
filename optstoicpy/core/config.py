@@ -24,7 +24,6 @@ rxnSji = json.load(open(os.path.join(data_dir,
 kegg_compound = json.load(open(os.path.join(data_dir,
                                             'kegg_compound.json'), 'r+'))
 
-
 # Kegg_model default argument
 default_bound = {
     'C00001': [1, 1],
@@ -101,6 +100,7 @@ color_configs['dark'] = dict(COFACTOR_SHAPE="ellipse",  # "diamond"
                              RXN_NODE_COLOR="#E5E5E5",
                              BACKGROUND_COLOR="transparent",
                              ALL_FONT_COLOR="white")
+
 color_configs['dark']['colorMapping'] = {
     'C00002': '#F05456', 'C00008': '#FFC000',
     'C00003': '#149B76', 'C00004': '#149B76',
