@@ -5,6 +5,7 @@ import pulp
 from nose.tools import (
     assert_equal)
 import numpy as np
+import scipy.io
 import pandas as pd
 from sympy import (
     Matrix, 
@@ -249,6 +250,48 @@ def internal_loop_analysis(S_df, logger=None):
     Nint[Nint < eps] = 0
     # Remove single reaction loop (reaction involving only cofactors)
 
+def write_matfile(Sint_df, outputfilepath='Sint_no_cofactor_20160831.mat'):
+    """Convert S matrix to Matlab sparse matrix (.mat file) for null space analysis.
+    Coordinate (start from 1, not 0)
+    
+    Args:
+        Sint_df (TYPE): The Pandas.DataFrame of the internal S matrix
+            without cofactor
+        outputfilepath (TYPE): Description
+    
+    Returns:
+        TYPE: Description
+    """
+    # convert dataframe to matrix
+    Smat = Sint_df.as_matrix()
+
+    # get all indices for non-zero elements in Smat (row, col)
+    Smat_nzr, Smat_nzc = np.nonzero(Smat)
+
+    # get all non-zero elements from Smat
+    Smat_nze = Smat[Smat_nzr, Smat_nzc]
+
+    # Adjust for matlab coordinate
+    Smat_nzr = Smat_nzr + 1
+    Smat_nzc = Smat_nzc + 1
+
+    # This final line gives the size of the S matrix in matlab
+    nr, nc = Smat.shape
+
+    # Create a 2D array
+    sparseMat = np.vstack((Smat_nzr, Smat_nzc, Smat_nze)).T
+    sparseMat = np.vstack((sparseMat, np.array([[nr, nc, 0]])))
+
+    # Create a numpy object array from dataframe index
+    reactionList = Sint_df.columns.ravel()
+
+    # Write only one matlab .mat file
+    scipy.io.savemat(outputfilepath,
+                     mdict={ 'Sint_sparse': sparseMat,
+                             'reactionList': np.array(reactionList)}
+                    )
+
+    return sparseMat, reactionList
 
 def test_blocked_reactions_analysis():
 
@@ -350,6 +393,11 @@ def test_internal_loop_analysis():
 
     assert_equal(S_df_no_cofactor.shape, (1844, 3256))
 
+    # Method 1: MATLAB
+    # sparseMat, reactionList = write_matfile(S_df_no_cofactor)
+    # run find_null_space.m to obtain all the loops
+
+    # Method 2: This function is not yet implemented as it is too slow
     # internal_loop_analysis(S_df_no_cofactor)
 
     return S_df_no_cofactor

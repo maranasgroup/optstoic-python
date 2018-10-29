@@ -33,8 +33,8 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[ 'pandas>=0.18.0',
-                       #'scipy>=0.17.0',
-                       #'numpy>=1.11.1',
+                       'scipy>=0.17.0',
+                       'numpy>=1.11.1',
                        'sympy',
                        'graphviz>=0.4.8',
                        'PuLP>=1.6.1'],
