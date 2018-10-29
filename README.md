@@ -71,5 +71,19 @@ pip install pandas
 
 4. [Component-Contribution](https://github.com/eladnoor/component-contribution) (*Optional, unless you want to perform MDF analysis)
 
+## Tests
+After cloning the repo or setup, please run tests as followed:
+```
+pip install nose 
+nosetests -s -v 
+```
+
+To test the optimization algorithms, please run tests as followed. The runtime depends on the solvers selected by PuLP.
+```
+from optstoicpy.test.testAll import test_all_optimization_scripts
+test_all_optimization_scripts()
+```
+
+
 ## Reference
 Please cite Chiam Yu Ng, Lin Wang, Anupam Chowdhury and Costas D. Maranas, 2018 (under review).
