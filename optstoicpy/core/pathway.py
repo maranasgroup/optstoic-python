@@ -3,43 +3,47 @@ from .reaction import Reaction
 from .config import cofactors, default_params, rxnSji
 import os
 from collections import OrderedDict
-
-"""
-Todo:
-Change reaction_ids and fluxes to read_only list.
-Can only update them using function.
-
-"""
+from optstoicpy.script.utils import create_logger
 
 
 class Pathway(object):
     """OptStoic Pathway class"""
 
-    def __init__(self, id=None, name=None,
-                 reaction_ids=[], fluxes=[], reactions=None,
-                 sourceSubstrateID='C00031', endSubstrateID='C00022',
-                 total_flux_no_exchange=None, note={}):
+    def __init__(self, 
+                 id=None, 
+                 name=None,
+                 reaction_ids=[], 
+                 fluxes=[], 
+                 reactions=None,
+                 sourceSubstrateID='C00031', 
+                 endSubstrateID='C00022',
+                 total_flux_no_exchange=None, 
+                 note={},
+                 logger=None):
         """
         A Pathway instance can be initialized by either
             (a) List of reaction_ids and fluxes (Let reactions = None)
             (b) List of reaction instances (reaction_ids and fluxes
                 will be populated)
-
-        Keyword arguments:
-        id -- pathway id
-        name -- pathway name
-        reaction_ids -- list of reaction IDs (kegg_id) in the pathway
-        fluxes -- list of reaction fluxes corresponding to the reaction_ids
-        reactions  -- list of reaction object that form the pathway
-        sourceSubstrateID -- Kegg compound ID of the source metabolite of
-                             the pathway
-        endSubstrateID -- Kegg compound ID of the end metabolite of the pathway
-        note -- (For debugging purpose) modelstat and solvestat can be added
+        Args:
+            id (None, optional): Pathway id
+            name (None, optional): Pathway name
+            reaction_ids (list, optional): A list of reaction IDs (kegg_id) in the pathway
+            fluxes (list, optional): A list of reaction fluxes corresponding to the reaction_ids
+            reactions (None, optional): Description
+            sourceSubstrateID (str, optional): Kegg compound ID of the source metabolite of
+                the pathway
+            endSubstrateID (str, optional): Kegg compound ID of the end metabolite of the pathway
+            total_flux_no_exchange (None, optional): Sum of absolute flux through the pathway (Exclude export reactions)
+            note (dict, optional): (For debugging purpose) modelstat and solvestat can be added
         """
+        if logger is None:
+            self.logger = create_logger('core.Pathway')
+        else:
+            self.logger = logger
         self.id = id
         self.name = name
-        self.note = note
-        self.total_flux_no_exchange = total_flux_no_exchange
+        self.note = note        
 
         # Iniatilize pathway object using list of reaction_ids and fluxes
         if reactions is None:
@@ -55,16 +59,23 @@ class Pathway(object):
             self.fluxes = fluxes
             # Create list of reaction objects
             self.reactions = Reaction.create_Reaction_list_from_dict(
-                {'reaction_id': self.reaction_ids, 'flux': self.fluxes})
+                {'reaction_id': self.reaction_ids, 'flux': self.fluxes},
+                excludeExchangeRxn=True)
+
         # Iniatilize pathway object using list of reaction objects
         else:
             self.reactions = reactions
             self.fluxes = [r.flux for r in reactions]
             self.reaction_ids = [r.rid for r in reactions]
 
-        if not self.total_flux_no_exchange:
+        self.reaction_ids_no_exchange = [r for r in reaction_ids if 'EX_' not in r]
+
+        if not total_flux_no_exchange:
             self.total_flux_no_exchange = sum(map(
                 abs, [r.flux for r in self.reactions]))
+        else:
+            self.total_flux_no_exchange = total_flux_no_exchange
+
 
         self.rxn_flux_dict = dict(zip(self.reaction_ids, self.fluxes))
 
@@ -112,6 +123,12 @@ class Pathway(object):
         else:
             return None
 
+    def get_time(self):
+        if 'time' in self.note:
+            return self.note['time']
+        else:
+            return None
+
     def get_reaction_involving_reactant(self, substrate_ID):
         """get reactions that involve reactant substrate_ID"""
         output = []
@@ -122,8 +139,9 @@ class Pathway(object):
 
     def rearrange_reaction_order(self):
         """
-        Try to implement a topological sorting of the pathway
-        (Todo: use a different algorithm)
+        Try to implement a topological sorting of the pathway.
+        This was done in a very early stage of the project.
+        (Todo: use a different algorithm, e.g., graph-based breadth-first search algorithm)
 
         """
         # Exclude exchange reaction from being rearranged
@@ -172,10 +190,6 @@ class Pathway(object):
             {'reaction_id': sortedRxnUnique, 'flux': sortedRxnFlux})
         return self
 
-    def __repr__(self):
-        return "<OptStoicPathway(id='%s', numRxn='%s', nATP='%s')>" % (
-            self.id, len(self.reaction_ids), self.nATP)
-
     # @staticmethod
     def get_pathway_similarity_index(self, pathway2):
         """Calculate the jaccard index of two pathways"""
@@ -184,12 +198,28 @@ class Pathway(object):
         idscore = len(a & b) / len(a | b)
         return idscore
 
+    def get_pathway_similarity_index_no_exchange(self, pathway2):
+        """Calculate the jaccard index of two pathways"""
+        a = set(self.reaction_ids_no_exchange)
+        b = set(pathway2.reaction_ids_no_exchange)
+        idscore = len(a & b) / len(a | b)
+        return idscore
+
+
     def is_same_pathway_with(self, another_pathway):
         idscore = self.get_pathway_similarity_index(another_pathway)
         if idscore == 1:
             return 1
         else:
             return 0
+
+    def to_dict(self):
+        return dict(pathway=self.get_pathway_dict(),
+            num_reaction=len(self.reaction_ids),
+            total_flux_no_exchange=self.get_total_flux_no_exchange(),
+            modelstat=self.get_modelstat(),
+            solvestat=self.get_solvestat(),
+            time=self.get_time())
 
     @staticmethod
     def pathways_to_dict(list_of_pathways):
@@ -198,29 +228,35 @@ class Pathway(object):
         """
         output = {}
         for p in list_of_pathways:
-            output[p.id] = dict(pathway=p.get_pathway_dict(),
-                                num_reaction=len(p.reaction_ids),
-                                total_flux_no_exchange=p.get_total_flux_no_exchange(),
-                                modelstat=p.get_modelstat(),
-                                solvestat=p.get_solvestat())
+            output[p.id] = p.to_dict()
 
         return output
+
+    def __repr__(self):
+        return "<OptStoicPathway(id='%s', numRxn='%s', nATP='%s')>" % (
+            self.id, len(self.reaction_ids), self.nATP)
 
 # ----------------------------------------------------------------------------
 
 
-def generate_kegg_model(pathway, params=default_params,
-                        filehandle=None, add_ratio_constraints=False):
+def generate_kegg_model(pathway, 
+                        params=default_params,
+                        filehandle=None, 
+                        add_ratio_constraints=False):
     """
     Convert the pathway to KEGG model format
     (as input for Component Contribution/MDF)
-
-    Keyword arguments:
-    pathway -- pathway object
-    params -- Kegg model parameters (default parameters are given)
-    filehandle -- If a text file handle is provided,
-                  it write the model text to the file (default None)
-
+    
+    Args:
+        pathway (TYPE): A pathway instance
+        params (TYPE, optional): KEGG model parameters (default parameters are given)
+        filehandle (None, optional): If a text file handle is provided,
+            it writes the model text to the file (default None)
+        add_ratio_constraints (bool, optional): Description
+    
+    Returns:
+        TYPE: Description
+    
     """
     params['ENTRY'] = "{0}_{1}ATP_P{2}".format(pathway.name,
                                                pathway.nATP, pathway.id)
@@ -255,7 +291,7 @@ C_RANGE\t\t{C_RANGE[0]:.0e} {C_RANGE[1]:.0e}\n""".format(**params)
         else:
             modeltext += "\t\t\t{0} {1[0]:e} {1[1]:e}\n".format(cid, bounds)
 
-    # write the reactions
+    # write the reactions (in the direction of the flux)
     for i, rxn in enumerate(pathway.reactions):
         rxn.set_equation()
         if i == 0:
@@ -270,43 +306,3 @@ C_RANGE\t\t{C_RANGE[0]:.0e} {C_RANGE[1]:.0e}\n""".format(**params)
         filehandle.write(modeltext)
 
     return modeltext
-
-
-def test():
-    testpathway = {'flux': [-1.0, 1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0,
-                            1.0, 1.0, -1.0, -1.0, -1.0, -1.0, 2.0, 1.0,
-                            1.0, 1.0, -1.0, 1.0],
-                   'iteration': 1,
-                   'reaction_id': ['R00200', 'R00300', 'R00658', 'R01059',
-                                   'R01063', 'R01512', 'R01518', 'R01519',
-                                   'R01538', 'R08570', 'EX_glc', 'EX_nad',
-                                   'EX_adp', 'EX_phosphate', 'EX_pyruvate',
-                                   'EX_nadh', 'EX_atp', 'EX_h2o', 'EX_nadp',
-                                   'EX_nadph']}
-
-    p1 = Pathway(id=1, name='OptStoic',
-                 reaction_ids=testpathway['reaction_id'],
-                 fluxes=testpathway['flux'])
-    p1.rearrange_reaction_order()
-
-    outputFilename = 'OptStoic'
-    print "INFO: Creating 'res' folder in the current directory if not exist..."
-    outputFilepath = 'res'
-
-    try:
-        os.makedirs(outputFilepath)
-    except OSError:
-        if not os.path.isdir(outputFilepath):
-            raise
-
-    f = open(os.path.join(outputFilepath,
-                          outputFilename + '.txt'), 'a+')
-    kegg_model_text = generate_kegg_model(p1, filehandle=f)
-    print kegg_model_text
-    f.close()
-    print "Testing Pathway.py: Pass\n"
-    return 1
-
-
-if __name__ == "__main__":
-    test()

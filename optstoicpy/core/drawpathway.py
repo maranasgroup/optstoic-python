@@ -70,35 +70,36 @@ def apply_styles(graph, styles):
 
 def draw_pathway(Pathway, imageFileName=None, imageFormat='png',
                  graphTitle='', scaleLineWidth=False, scalingFactor=200.0,
-                 cleanup=True, engine='dot', darkBackgroundMode=False, debug=False):
+                 cleanup=True, engine='dot', darkBackgroundMode=False):
 
     """
     Draw a digraph for a Pathway objects and render it as
     the given imageFormat using Graphviz.
 
-    Keyword arguments:
-    Pathway -- A Pathway object (pathway.py)
-    imageFileName -- Name of the output file (default Pathway.name)
-    imageFormat -- Any format that Graphviz can support (default 'png')
-    graphTitle -- Title of the output graph
-    scaleLineWidth -- If true, scale the penwidth of an edge
-                      to a value between 1 and 10. This is useful when
-                      fluxes are too large.
-                      Else, the penwidth of an edge is absolute value
-                      of the flux value.  (default False)
-    scalingFactor -- If scaleLineWidth is true,
-                     penwidth = (abs(flux)/scalingFactor) * 10 + 1.
-                     (E.g. Use the maximum flux values of a
-                     pathway as the scaling Factor)
-    cleanup -- delete the ".dot" file after drawing
-    engine -- Graphviz layout engine used to render the graph.
-              Layout engines = {'circo', 'dot', 'fdp', 'neato', 'nop1', 'nop2',
-                                'osage', 'patchwork', 'sfdp', 'twopi'}
-    darkBackgroundMode -- change all color settings to make graph
-                          for dark background
+    Args:
+        Pathway (TYPE): A Pathway object (pathway.py)
+        imageFileName (None, optional): Name of the output file (default Pathway.name)
+        imageFormat (str, optional): Any format that Graphviz can support (default 'png')
+        graphTitle (str, optional): Title of the output graph
+        scaleLineWidth (bool, optional): If true, scale the penwidth of an edge
+            to a value between 1 and 10. This is useful when
+            fluxes are too large.
+            Else, the penwidth of an edge is absolute value
+            of the flux value.  (default False)
+        scalingFactor (float, optional): If scaleLineWidth is true,
+            penwidth = (abs(flux)/scalingFactor) * 10 + 1.
+            (E.g. Use the maximum flux values of a
+            pathway as the scaling Factor)
+        cleanup (bool, optional): delete the ".dot" file after drawing
+        engine (str, optional): Graphviz layout engine used to render the graph.
+            Layout engines = {'circo', 'dot', 'fdp', 'neato', 'nop1', 'nop2',
+                             'osage', 'patchwork', 'sfdp', 'twopi'}
+        darkBackgroundMode (bool, optional): change all color settings to make graph
+            for dark background
+
+    Returns:
+        TYPE: Description
     """
-    if debug:
-        logging.warning('Debug mode: Drawing pathway.')
     if darkBackgroundMode:
         colorConfig = color_configs['dark']
     else:

@@ -1,39 +1,43 @@
-# Author: Chiam Yu
-# Inspired by the Reaction class of cobrapy package
-# Reaction class
 from .config import rxnSji
-
+from optstoicpy.script.utils import create_logger
 
 class Reaction(object):
-    """Reaction class"""
+    """Reaction class
 
-    def __init__(self, rid=None, flux=1, metabolites={},
-                 equation='', reversible=True):
+    Attributes:
+        equation (TYPE): Description
+        flux (TYPE): Description
+        metabolites (TYPE): Description
+        reversible (TYPE): Description
+        rid (TYPE): Description
+    """
+
+    def __init__(self, 
+                 rid=None, 
+                 flux=1, 
+                 metabolites={},
+                 equation='', 
+                 reversible=True,
+                 logger=None):
+
+        if logger is None:
+            self.logger = create_logger('core.Reaction')
+        else:
+            self.logger = logger
+
         self.rid = rid
         self.flux = flux
         self.metabolites = metabolites
         self.equation = equation
         self.reversible = reversible
 
-    def get_rid(self):
-        return self.rid
-
-    def get_metabolites(self):
-        return self.metabolites
-
-    def get_equation(self):
-        return self.equation
-
     def autoset_metabolites(self):
         if len(self.metabolites) > 0:
-            print "WARNING: Metabolites exists!"
+            self.logger.warning("Metabolites exists!")
         else:
-            print "Retrieving metabolites from default database"
+            self.logger.info("Retrieving metabolites from default database")
             self.metabolites = rxnSji[self.rid]
         return self.metabolites
-
-    def flux(self):
-        return self.flux
 
     @property
     def reactants(self):
@@ -49,20 +53,18 @@ class Reaction(object):
         else:
             return [k for k, v in self.metabolites.items() if v < 0]
 
-    def __str__(self):
-        return "Reaction('%s')" % self.rid
-
-    def __repr__(self):
-        return "Reaction('%s')" % self.rid
-
     def set_equation(self):
-        """Write equation in the direction of the flux"""
+        """Write equation in the direction of the flux.
+        The main purpose is to simplify downstream MDF/protein cost analysis.
+        
+        Returns:
+            TYPE: Description
+        """
         if len(self.equation) != 0:
-            print "WARNING: Equation exists!"
+            self.logger.warning("Equation exists!")
         else:
             if len(self.metabolites) == 0:
-                print "Metabolites are not available!"
-                print "Auto-updating metabolites..."
+                self.logger.info("Metabolites are not available! Auto-updating metabolites...")
                 self.autoset_metabolites()
 
             temp_list = []
@@ -90,17 +92,18 @@ class Reaction(object):
     @classmethod
     def create_Reaction_list_from_dict(cls, dataDict, excludeExchangeRxn=True):
         """
-        Make a list of Reaction object from dataDict,
-        excluding exchange reaction
+        Make a list of Reaction object from dataDict, excluding exchange reactions.
 
         E.g.
         dataDict = {'reaction_id': ['R00001', 'R00002'], 'flux': [-1, 1]}
         output = [Reaction('R00001'), Reaction('R00002')]
 
-        Keyword arguments:
-        dataDict -- dictionary with reaction_id and flux
-        excludeExchangeRxn -- Exclude all exchange reactions in the list
-                              (default true)
+        Args:
+            dataDict (TYPE): ictionary with reaction_id and flux
+            excludeExchangeRxn (bool, optional): Exclude all exchange reactions in the list. Default to True.
+
+        Returns:
+            TYPE: Description
         """
         RxnObjList = []
         for i in range(len(dataDict['reaction_id'])):
@@ -113,3 +116,9 @@ class Reaction(object):
             tempRxn.metabolites = rxnSji[tempRxn.rid]
             RxnObjList.append(tempRxn)
         return RxnObjList
+
+    def __str__(self):
+        return "Reaction('%s')" % self.rid
+
+    def __repr__(self):
+        return "Reaction('%s')" % self.rid

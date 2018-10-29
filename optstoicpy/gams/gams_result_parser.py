@@ -1,8 +1,6 @@
-# import sys
-# sys.path.append('../')
-from ..core.reaction import Reaction
-from ..core.pathway import Pathway, generate_kegg_model
-from ..core.drawpathway import *
+from optstoicpy.core.reaction import Reaction
+from optstoicpy.core.pathway import Pathway, generate_kegg_model
+from optstoicpy.core.drawpathway import *
 import cPickle as pickle
 import os
 import json
