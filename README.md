@@ -84,6 +84,8 @@ from optstoicpy.test.testAll import test_all_optimization_scripts
 test_all_optimization_scripts()
 ```
 
+## Development
+To continue development with the code, please create a virtual environment and use `python setup.py develop` for installation.
 
 ## Reference
 Please cite Chiam Yu Ng, Lin Wang, Anupam Chowdhury and Costas D. Maranas, 2018 (under review).
