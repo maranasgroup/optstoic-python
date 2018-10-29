@@ -1,9 +1,17 @@
+import os
 import copy
 import json
 import pulp
 from nose.tools import (
     assert_equal)
-from sympy import Matrix, S, nsimplify
+import numpy as np
+import pandas as pd
+from sympy import (
+    Matrix, 
+    S, 
+    nsimplify
+    )
+from sympy.matrices import SparseMatrix
 from optstoicpy.core.database import (
     load_custom_reactions_to_be_excluded, 
     load_base_reaction_db
@@ -14,7 +22,6 @@ from optstoicpy.script.solver import load_pulp_solver
 def blocked_reactions_analysis(
     database, 
     pulp_solver,
-    user_defined_export_rxns_Sji,
     specific_bounds,
     custom_flux_constraints,
     excluded_reactions=None, 
@@ -43,9 +50,6 @@ def blocked_reactions_analysis(
         database (:obj:`BaseReactionDatabase`): The default reaction database
             without blocked reactions/loops.
         pulp_solver (TYPE): The solver for PuLP.
-        user_defined_export_rxns_Sji (dict): The list of export reactions that
-            need to be added to the model for metabolite exchange (i.e., any metabolite
-            that participate in the design equation)
         specific_bounds (dict): LB and UB for exchange reactions which defined the
             overall design equations. E.g. {'Ex_glc': {'LB': -1, 'UB':-1}}
         custom_flux_constraints (TYPE): The custom constraints that need to be 
@@ -64,9 +68,14 @@ def blocked_reactions_analysis(
     
     Raises:
         ValueError: Description
+    
+    Deleted Parameters:
+        user_defined_export_rxns_Sji (dict): The list of export reactions that
+            need to be added to the model for metabolite exchange (i.e., any metabolite
+            that participate in the design equation)
     """
     if logger is None:
-        logger = create_logger(name="Blocked reaction analysis")
+        logger = create_logger(name="optstoicpy.script.database_preprocessing.blocked_reactions_analysis")
 
     logger.warning("This process may take a long time to run. It is recommended to be run in a batch script.")
     
@@ -169,9 +178,48 @@ def blocked_reactions_analysis(
 
     return blocked_reactions, FVA_res
 
-
-def internal_loop_analysis():
+def remove_cofactors_from_Sij(Sij_df, cofactors):
     """
+    Remove row of cofactors i from Sij matrix.
+    Remove reaction j that involved only cofactors from Sij matrix.
+    
+    Args:
+        Sij_df (TYPE): Description
+        cofactors (TYPE): Description
+    
+    Returns:
+        TYPE: Description
+    """
+    if len(cofactors) == 0:
+        return Sij_df
+
+    # Get a list of cofactors in the model
+    cofactors = list(set(cofactors) & set(Sij_df.index.tolist()))
+
+    # Remove row of cofactors
+    nSij_df = Sij_df.drop(cofactors)
+
+    allRxns = nSij_df.columns.tolist()
+
+    # Get all columns (j) with all zero entries
+    rxns_involving_cofactors_only = nSij_df.columns[(nSij_df == 0).all()].tolist()
+
+    remainRxns = list(set(allRxns) - set(rxns_involving_cofactors_only))
+
+    # Drop all columns with zero entries
+    nSij_df2 = nSij_df[sorted(remainRxns)]
+
+    return nSij_df2
+
+def internal_loop_analysis(S_df, logger=None):
+    """
+    Identifies the "rational" basis for the null space of S_df matrix,
+    and convert them to internal loops.
+    This is an alternative to the Matlab function 
+    null(S_df, 'r') (which is significantly faster). 
+    Warning: This is extremely time consuming. Please use the MATLAB
+        version.
+
     M = Matrix([[16, 2, 3,13],
     [5,11,10, 8],
     [9, 7, 6,12],
@@ -179,12 +227,32 @@ def internal_loop_analysis():
 
     print(nsimplify(M, rational=True).nullspace())
     """
-    pass
+    if logger is None:
+        logger = create_logger(name="optstoicpy.script.database_preprocessing.internal_loop_analysis")
+    
+    raise NotImplementedError("Use the Matlab version as this is too slow.")
+
+    reactions = S_df_no_cofactor.columns.tolist()
+    metabolites = S_df_no_cofactor.index.tolist()
+    Sint = S_df_no_cofactor.as_matrix()
+
+    # Sint_mat = Matrix(Sint) # too slow
+    Smat = SparseMatrix(Sint.astype(int))
+
+    # Get the rational basis of the null space of Sint
+    Nint_mat = nsimplify(Smat, rational=True).nullspace()
+
+    # Convert back to numpy array
+    Nint = np.array(Nint_mat).astype(np.float64)
+
+    eps = 1e-9
+    Nint[Nint < eps] = 0
+    # Remove single reaction loop (reaction involving only cofactors)
 
 
 def test_blocked_reactions_analysis():
 
-    logger = create_logger(name="Test blocked_reactions_analysis")
+    logger = create_logger(name="optstoicpy.script.database_preprocessing.test_blocked_reactions_analysis")
 
     user_defined_export_rxns_Sji = {
         'EX_glc': {'C00031': -1.0},
@@ -199,6 +267,10 @@ def test_blocked_reactions_analysis():
         'EX_nadp': {'C00006': -1.0},
         'EX_nadph': {'C00005': -1.0}
         }
+
+    db = load_base_reaction_db(
+        user_defined_export_rxns_Sji=user_defined_export_rxns_Sji
+        )
 
     custom_flux_constraints = [
         {'constraint_name': 'nadphcons1',
@@ -228,7 +300,7 @@ def test_blocked_reactions_analysis():
                     'EX_phosphate': {'LB': -5, 'UB': -1},
                     'EX_atp': {'LB': 1, 'UB': 5}, # range 1-5 ATP
                     'EX_h2o': {'LB': 1, 'UB': 5},
-                    'EX_hplus': {'LB': -10, 'UB': 10}} #pulp/gurobi has issue with "h+"
+                    'EX_hplus': {'LB': -10, 'UB': 10}} #pulp/gurobi has issue with "h+"    
 
     pulp_solver = load_pulp_solver(
         solver_names=['SCIP_CMD', 'GUROBI', 'GUROBI_CMD', 'CPLEX_CMD', 'GLPK_CMD'],
@@ -236,14 +308,9 @@ def test_blocked_reactions_analysis():
 
     exclude_reactions = load_custom_reactions_to_be_excluded()
 
-    db = load_base_reaction_db(
-        user_defined_export_rxns_Sji=user_defined_export_rxns_Sji
-        )
-
     blocked_reactions_list, FVA_res = blocked_reactions_analysis(
         database=db,
         pulp_solver=pulp_solver,
-        user_defined_export_rxns_Sji=user_defined_export_rxns_Sji,
         specific_bounds=specific_bounds,
         custom_flux_constraints=custom_flux_constraints,        
         excluded_reactions=exclude_reactions,
@@ -252,6 +319,40 @@ def test_blocked_reactions_analysis():
     assert_equal(set(blocked_reactions_list), set(['R01266', 'R07882']))
 
     return blocked_reactions_list, FVA_res
+
+def test_internal_loop_analysis():
+
+    logger = create_logger(name="optstoicpy.script.database_preprocessing.test_internal_loop_analysis")
+
+    # Load the base database without exchange reactions
+    db = load_base_reaction_db(
+        user_defined_export_rxns_Sji=None
+        )
+
+    # Load cofactors
+    CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+    DATA_DIR = os.path.normpath(
+        os.path.join(CURRENT_DIR, '../data/'))
+    cofactors_df = pd.read_csv(os.path.join(DATA_DIR, 'cofactors_to_exclude.csv'))
+    cofactors = cofactors_df['KEGG_ID'].tolist()
+
+    # Remove blocked reaction
+    blocked_reactions = json.load(open(os.path.join(DATA_DIR, 
+                                                    'optstoic_db_v3',
+                                                    'optstoic_v3_blocked_reactions_0to5ATP.json'), 'r+'))
+    for rxn in blocked_reactions:
+        db.remove_reaction(rxn, refresh_database=False)
+    db.refresh_database()
+
+    # Remove cofactors
+    S_df = copy.deepcopy(db.S_df)
+    S_df_no_cofactor = remove_cofactors_from_Sij(S_df, cofactors)
+
+    assert_equal(S_df_no_cofactor.shape, (1844, 3256))
+
+    # internal_loop_analysis(S_df_no_cofactor)
+
+    return S_df_no_cofactor
 
 
 if __name__ == '__main__':

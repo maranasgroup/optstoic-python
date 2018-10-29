@@ -141,7 +141,7 @@ class OptStoicGlycolysis(OptStoic):
 
 
 def test_optstoic_glycolysis():
-    logger = create_logger(name='script.optstoic_glycolysis.main')
+    logger = create_logger(name='optstoicpy.script.optstoic_glycolysis.main')
     #logger.debug('Testing optstoic output filepath: %s', res_dir)
     logger.info("Test optstoic_glycolysis")
 

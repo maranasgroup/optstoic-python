@@ -3,8 +3,6 @@ OptStoic python package
 Perform optStoic analysis using Python code that share the same data files with GAMS code.
 
 Note: All the examples are specific for glycolysis pathway generation. 
-Currently, the main package is available in `optstoicpy` folder. We are working to move more modules into the package. 
-
 
 ## Requirement:
 At least one of the following optimization solvers should be installed. To solve the loopless optStoic formulation, an optimization solver other than GLPK is recommended.
@@ -73,3 +71,5 @@ pip install pandas
 
 4. [Component-Contribution](https://github.com/eladnoor/component-contribution) (*Optional, unless you want to perform MDF analysis)
 
+## Reference
+Please cite Chiam Yu Ng, Lin Wang, Anupam Chowdhury and Costas D. Maranas, 2018 (under review).

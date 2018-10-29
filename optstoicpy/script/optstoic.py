@@ -599,7 +599,7 @@ class OptStoic(object):
 def test_optstoic():
     """An alternative to the nosetest due to issue with PULP/SCIP_CMD
     """
-    logger = create_logger(name='script.optstoic.main')
+    logger = create_logger(name='optstoicpy.script.optstoic.main')
 
     logger.info("Test generalized optstoic")
 
