@@ -42,11 +42,6 @@ class OptStoicGlycolysis(OptStoic):
         'EX_nadph': {'C00005': -1.0}
         }
 
-    DBV3 = database.load_db_v3(
-        reduce_model_size=True,
-        user_defined_export_rxns_Sji=EXPORT_RXNS_SJI
-        )
-
     CUSTOM_REDOX_CONSTRAINTS = [
         {'constraint_name': 'nadphcons1',
          'reactions': ['EX_nadph', 'EX_nadh'],
@@ -101,6 +96,12 @@ class OptStoicGlycolysis(OptStoic):
             M (int, optional): Description
             logger (None, optional): Description
         """
+
+        self.DBV3 = database.load_db_v3(
+            reduce_model_size=True,
+            user_defined_export_rxns_Sji=self.EXPORT_RXNS_SJI
+            )
+
         super(OptStoicGlycolysis, self).__init__(
                          database=self.DBV3,
                          objective='MinFlux',
