@@ -4,7 +4,14 @@ Perform optStoic analysis using Python code that share the same data files with 
 
 Note: All the examples are specific for glycolysis pathway generation. 
 
-## Requirement:
+## Install
+```
+git clone https://github.com/maranasgroup/optstoic-python.git
+cd optstoic-python
+python setup.py install
+```
+
+## Requirement
 At least one of the following optimization solvers should be installed. To solve the loopless optStoic formulation, an optimization solver other than GLPK is recommended.
 
 1. GLPK 4.47 installation
@@ -35,7 +42,7 @@ sudo make install INSTALLDIR="/usr/local/"
 
 4. [CPLEX Optimizer](https://www.ibm.com/analytics/cplex-optimizer)
 
-## Current project dependencies:
+## Current project dependencies
 1. [PuLP](https://github.com/coin-or/pulp). Run the [test](https://www.coin-or.org/PuLP/main/installing_pulp_at_home.html#testing-your-pulp-installation).
 ```
 pip install pulp
@@ -83,6 +90,9 @@ To test the optimization algorithms, please run tests as followed. The runtime d
 from optstoicpy.test.testAll import test_all_optimization_scripts
 test_all_optimization_scripts()
 ```
+
+## Usage
+Read the [tutorial](https://github.com/maranasgroup/optstoic-python/blob/master/optstoicpy/examples/methods.md).
 
 ## Development
 To continue development with the code, please create a virtual environment and use `python setup.py develop` for installation.
