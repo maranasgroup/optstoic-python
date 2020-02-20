@@ -98,4 +98,4 @@ Read the [tutorial](https://github.com/maranasgroup/optstoic-python/blob/master/
 To continue development with the code, please create a virtual environment and use `python setup.py develop` for installation.
 
 ## Reference
-Please cite Chiam Yu Ng, Lin Wang, Anupam Chowdhury and Costas D. Maranas, 2018 (under review).
+Please cite [Ng, C.Y., Wang, L., Chowdhury, A. et al. Pareto Optimality Explanation of the Glycolytic Alternatives in Nature. Sci Rep 9, 2633 (2019). https://doi.org/10.1038/s41598-019-38836-9](https://www.nature.com/articles/s41598-019-38836-9).
