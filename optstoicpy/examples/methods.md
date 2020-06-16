@@ -1,6 +1,6 @@
 # optStoic Python tutorial
 - Author: Chiam Yu Ng
-- Reference:  Chiam Yu Ng, Lin Wang, Anupam Chowdhury and Costas D. Maranas, 2018 (under review)
+- Reference:  Chiam Yu Ng, Lin Wang, Anupam Chowdhury and Costas D. Maranas, Scientific Reports 2019
 - Details on the algorithms is provided in the paper.
 
 ## Methods
