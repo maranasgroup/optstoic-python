@@ -71,9 +71,18 @@ def apply_styles(graph, styles):
     return graph
 
 
-def draw_pathway(Pathway, imageFileName=None, imageFormat='png',
-                 graphTitle='', scaleLineWidth=False, scalingFactor=200.0,
-                 cleanup=True, engine='dot', darkBackgroundMode=False):
+def draw_pathway(
+    Pathway, 
+    imageFileName=None, 
+    imageFormat='png',
+    graphTitle='', 
+    scaleLineWidth=False, 
+    scalingFactor=200.0,
+    cleanup=True, 
+    engine='dot', 
+    darkBackgroundMode=False,
+    width=5,
+    height=5):
 
     """
     Draw a digraph for a Pathway objects and render it as
@@ -98,7 +107,9 @@ def draw_pathway(Pathway, imageFileName=None, imageFormat='png',
             Layout engines = {'circo', 'dot', 'fdp', 'neato', 'nop1', 'nop2',
                              'osage', 'patchwork', 'sfdp', 'twopi'}
         darkBackgroundMode (bool, optional): change all color settings to make graph
-            for dark background
+            for dark background.
+        width (int, optional): Graphviz graph width
+        height (int, optional): Graphviz graph height
 
     Returns:
         TYPE: Description
@@ -113,7 +124,7 @@ def draw_pathway(Pathway, imageFileName=None, imageFormat='png',
     g = gv.Digraph('G', format=imageFormat, engine=engine)
 
     # g.graph_attr['ratio']='fill'
-    g.graph_attr['size'] = "10, 10"
+    g.graph_attr['size'] = "{},{}".format(width,height)
     if imageFormat == 'png':
         g.graph_attr['dpi'] = '300'
     elif imageFormat == 'svg':
@@ -196,7 +207,7 @@ def draw_pathway(Pathway, imageFileName=None, imageFormat='png',
         imageFileName = Pathway.name
     g.render(imageFileName, cleanup=cleanup)
 
-    return 1  # g.source
+    return g
 
 
 def test_drawpathway():

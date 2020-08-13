@@ -10,6 +10,7 @@ with open(os.path.join(current_dir, 'README.md'), encoding='utf-8') as f:
 
 install_requires = [
     'pandas>=0.18.0',
+    'xlrd',
     'scipy>=0.17.0',
     'numpy>=1.11.1',
     'sympy',
@@ -36,7 +37,7 @@ setup(
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Bio-Informatics',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.8',
     ],
     packages=find_packages(exclude=['build',
                                      'data',
@@ -45,6 +46,9 @@ setup(
     install_requires=install_requires,
     test_suite='nose.collector',
     tests_require=test_requires,
+    extras_require={
+        "Jupyter": ['notebook', 'ipykernel']
+    },
     package_dir={'optstoicpy': 'optstoicpy'},
     package_data={
         'optstoicpy': [ 'data/*.csv',

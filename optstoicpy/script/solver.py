@@ -30,29 +30,34 @@ def load_pulp_solver(
     GLPK_CMD_OPTIONS  = ['--clique', '--pcost', '--gomory', '--mipgap', '1e-6']
 
     pulp_solvers = {
-        'SCIP_CMD': pulp.solvers.SCIP_CMD(
+        'SCIP_CMD': pulp.get_solver(
+            'SCIP_CMD',
             keepFiles=0,
             mip=True,
             msg=True),
-        'GUROBI': pulp.solvers.GUROBI(
+        'GUROBI': pulp.get_solver(
+            'GUROBI',
             mip=True,
             msg=True,
             timeLimit=1800,
             MIPGapAbs=1e-6),
-        'GUROBI_CMD': pulp.solvers.GUROBI_CMD(
+        'GUROBI_CMD': pulp.get_solver(
+            'GUROBI_CMD',
             path=None,
             keepFiles=0,
             mip=1,
             msg=1,
             options=GUROBI_CMD_OPTIONS),
-        'CPLEX_CMD': pulp.solvers.CPLEX_CMD(
+        'CPLEX_CMD': pulp.get_solver(
+            'CPLEX_CMD',
             path=None,
             keepFiles=0,
             mip=1,
             msg=1,
             options=CPLEX_CMD_OPTIONS,
             timelimit=1800),
-        'GLPK_CMD': pulp.solvers.GLPK_CMD(
+        'GLPK_CMD': pulp.get_solver(
+            'GLPK_CMD',
             msg=1,
             mip=1,
             options=GLPK_CMD_OPTIONS)
