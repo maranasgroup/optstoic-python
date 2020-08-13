@@ -1,4 +1,7 @@
 from __future__ import print_function
+from builtins import zip
+from builtins import str
+from builtins import object
 import os
 import json
 import copy
@@ -218,11 +221,11 @@ class BaseReactionDatabase(object):
             TYPE: Description
         """
         temp_rxn = []
-        for met, entries in extension_dict.iteritems():
+        for met, entries in extension_dict.items():
             if met not in self.S:
                 self.S[met] = {}
                 self.metabolites.append(met)
-            for rxn, coeff in entries.iteritems():
+            for rxn, coeff in entries.items():
                 self.S[met][rxn] = float(coeff)
                 if rxn not in self.reactions:
                     self.reactions.append(rxn)
@@ -243,7 +246,7 @@ class BaseReactionDatabase(object):
         #     self.set_reaction_type(rxn, 4)
 
     def update_rxntype(self, new_reaction_type_dict):
-        for (r, rtype) in new_reaction_type_dict.iteritems():
+        for (r, rtype) in new_reaction_type_dict.items():
             self.set_reaction_type(r, rtype)
         return self.rxntype
 
@@ -396,7 +399,7 @@ class Database(BaseReactionDatabase):
     def remove_blocked_reactions(self):   
         self.logger.warning("Removing blocked reactions to reduce model size!")
 
-        loop_rxns = [v.keys() for v in self.Ninternal.values()]
+        loop_rxns = [list(v.keys()) for v in list(self.Ninternal.values())]
         loop_rxns = set([rid for sublist in loop_rxns for rid in sublist])
         assert len(loop_rxns & set(self.blocked_rxns)) == 0, "Blocked reactions must not present in loops"
 
@@ -511,8 +514,8 @@ def load_base_reaction_db(
         DATA_DIR, 'optstoic_v3_ATP_irreversible_forward_rxns.txt')
     )
 
-    new_reaction_type_dict = dict(zip(
-        irreversible_fwd_rxns, [0] * len(irreversible_fwd_rxns))
+    new_reaction_type_dict = dict(list(zip(
+        irreversible_fwd_rxns, [0] * len(irreversible_fwd_rxns)))
     )
     # Update reaction type  =  2
     irreversible_bwd_rxns = gams_parser.convert_set_to_list(os.path.join(
@@ -520,7 +523,7 @@ def load_base_reaction_db(
     )
 
     new_reaction_type_dict.update(dict(
-        zip(irreversible_bwd_rxns, [2] * len(irreversible_bwd_rxns)))
+        list(zip(irreversible_bwd_rxns, [2] * len(irreversible_bwd_rxns))))
     )
 
     DB.update_rxntype(new_reaction_type_dict)
@@ -611,8 +614,8 @@ def load_db_v3(
         DATA_DIR, 'optstoic_v3_ATP_irreversible_forward_rxns.txt')
     )
 
-    new_reaction_type_dict = dict(zip(
-        irreversible_fwd_rxns, [0] * len(irreversible_fwd_rxns))
+    new_reaction_type_dict = dict(list(zip(
+        irreversible_fwd_rxns, [0] * len(irreversible_fwd_rxns)))
     )
     # Update reaction type  =  2
     irreversible_bwd_rxns = gams_parser.convert_set_to_list(os.path.join(
@@ -620,7 +623,7 @@ def load_db_v3(
     )
 
     new_reaction_type_dict.update(dict(
-        zip(irreversible_bwd_rxns, [2] * len(irreversible_bwd_rxns)))
+        list(zip(irreversible_bwd_rxns, [2] * len(irreversible_bwd_rxns))))
     )
 
     DB.update_rxntype(new_reaction_type_dict)

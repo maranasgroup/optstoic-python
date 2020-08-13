@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import object
 import os
 from nose.tools import (
     assert_equal,
@@ -12,7 +13,7 @@ from optstoicpy.core.pathway import (
     generate_kegg_model
 )
 
-class TestPathway:
+class TestPathway(object):
     def setup(self):
         self.logger = create_logger(name='Test core.Pathway')
         self.pathway_fixture = {'flux': [-1.0, 1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0,

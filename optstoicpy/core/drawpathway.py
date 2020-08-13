@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import str
+from past.utils import old_div
 from .pathway import Pathway
 from .config import cofactorsList, kegg_compound, color_configs
 import graphviz as gv
@@ -138,7 +141,7 @@ def draw_pathway(Pathway, imageFileName=None, imageFormat='png',
                fontcolor=colorConfig['REACTION_COLOR'])
 
         if scaleLineWidth:
-            lineW = '%i' % (10 * abs(rxn.flux) / scalingFactor + 1)
+            lineW = '%i' % (old_div(10 * abs(rxn.flux), scalingFactor) + 1)
 
         else:
             if rxn.flux >= 1 or rxn.flux <= -1:

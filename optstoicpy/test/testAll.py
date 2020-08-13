@@ -40,7 +40,7 @@ def test_all_optimization_scripts():
 
     f = open(os.path.join(res_dir, 'test_KeggModel.txt'), 'w+')
 
-    for ind, p in pathways2.iteritems():
+    for ind, p in pathways2.items():
         p.rearrange_reaction_order()
         generate_kegg_model(p, filehandle=f)
         graph_title = "{0}_{1}ATP_P{2}".format(p.name, p.nATP, p.id)

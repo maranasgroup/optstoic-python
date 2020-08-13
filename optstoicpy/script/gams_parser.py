@@ -105,10 +105,10 @@ def write_list_to_file(reaction_list, outputfilename, quotes=False):
 def write_dict_to_file(paramdict, outputfilename, quotes=False):
     f = open(outputfilename,'w')
     if quotes:
-        for k,v in paramdict.iteritems():
+        for k,v in paramdict.items():
             f.write("'%s' %s\n"%(k, v))
     else:
-        for k,v in paramdict.iteritems():
+        for k,v in paramdict.items():
             f.write("%s %s\n"%(k, v))
     f.close()
     return 1
@@ -132,13 +132,13 @@ def write_nested_dict_to_file(data, outputfilename, orient='second'):
     f = open(outputfilename,'w')
 
     if orient == 'first':
-        for k1, g in data.iteritems():
-            for k2, v in g.iteritems():
+        for k1, g in data.items():
+            for k2, v in g.items():
                 f.write("'%s'.'%s'  %f\n" %(k1, k2, v))
 
     elif orient == 'second':
-        for k1, g in data.iteritems():
-            for k2, v in g.iteritems():
+        for k1, g in data.items():
+            for k2, v in g.items():
                 f.write("'%s'.'%s'  %f\n" %(k2, k1, v))
     else:
         raise ValueError("orient must be either 'first' or 'second'!")

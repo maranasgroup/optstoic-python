@@ -1,8 +1,10 @@
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
 from optstoicpy.core.reaction import Reaction
 from optstoicpy.core.pathway import Pathway, generate_kegg_model
 from optstoicpy.core.drawpathway import *
-import cPickle as pickle
+import pickle as pickle
 import os
 import json
 import pdb
@@ -58,7 +60,7 @@ def make_integer_cut(resultDict, outputfname):
     """ This generates gams readable file for integer cut using the resultSet data"""
 
     fid = open(outputfname, 'w+')
-    for ind, res in sorted(resultDict.iteritems()):
+    for ind, res in sorted(resultDict.items()):
         if "pathway" in res:
             if "num_reaction" not in res:
                 #if pathway is incomplete
@@ -80,7 +82,7 @@ def runAnalysis(resultDict, numATP, outputFilePath, imgFormat='png', shift_pathw
 
     f = open(os.path.join(outputFilePath, outputFileName + '_KeggModel.txt'), 'w+')
 
-    for ind, res in sorted(resultDict.iteritems()):
+    for ind, res in sorted(resultDict.items()):
         logging.debug("Pathway %s"%ind)
         if "pathway" not in res:
             logging.info("OptStoic terminated with infeasible solution.")
@@ -89,8 +91,8 @@ def runAnalysis(resultDict, numATP, outputFilePath, imgFormat='png', shift_pathw
             logging.info("Pathway is incomplete...")
             continue
 
-        p = Pathway(id=int(ind)+shift_pathway_id_by, name='OptStoic_gams', reaction_ids=res['pathway'].keys(),
-                    fluxes=res['pathway'].values(), sourceSubstrateID=sourceSubstrateID, endSubstrateID=endSubstrateID,
+        p = Pathway(id=int(ind)+shift_pathway_id_by, name='OptStoic_gams', reaction_ids=list(res['pathway'].keys()),
+                    fluxes=list(res['pathway'].values()), sourceSubstrateID=sourceSubstrateID, endSubstrateID=endSubstrateID,
                     total_flux_no_exchange=res['total_flux_no_exchange'],
                     note={'modelstat': res.get("modelstat"), 'solvestat': res.get("solvestat")})
         p.rearrange_reaction_order()
@@ -188,7 +190,7 @@ if __name__ == "__main__":
             'EX_h+': 2.00000000
     }
 
-    EDpath = Pathway(id='ED', name='ED', reaction_ids=ED.keys(), fluxes=ED.values())
+    EDpath = Pathway(id='ED', name='ED', reaction_ids=list(ED.keys()), fluxes=list(ED.values()))
     EDpath.rearrange_reaction_order()
     res = []
     for cpath in all_pathways:

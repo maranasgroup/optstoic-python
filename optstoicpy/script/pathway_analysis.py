@@ -2,6 +2,10 @@
 Compare and combine pathways from different parallel simulation (e.g. python and gams).
 """
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import range
 import matplotlib
 #matplotlib.use('SVG')
 matplotlib.use('Agg')
@@ -10,7 +14,7 @@ from optstoicpy.core.drawpathway import *
 import numpy as np
 from matplotlib import cm
 import matplotlib.pyplot as plt
-import cPickle as pickle
+import pickle as pickle
 import copy, os
 
 def get_pathway_identity_matrix(pathwayObjList, symmetry=True):
@@ -80,7 +84,7 @@ def get_unique_pathways_from_list(pathwayObjList, update_unique_id=True, sort_by
     #---debug function: to check which gams code generate feasible result
     if debug:
 
-        map_unique_index_to_pathid  = dict(zip(unique_index, range(1,len(unique_index)+1)))
+        map_unique_index_to_pathid  = dict(list(zip(unique_index, list(range(1,len(unique_index)+1)))))
         data_to_id_map = copy.deepcopy(map_unique_index_to_pathid)
 
         for ind in np.where(score>1)[0]:
@@ -272,7 +276,7 @@ def combine_multiple_pathways(pathway_set):
 
 def draw_combined_pathway(combined_reactions, fileName):
     reactionObjList= []
-    for r, v in combined_reactions.iteritems():
+    for r, v in combined_reactions.items():
         if v['count_f'] > 0:
             #Create a reaction object with number of reaction occurence in all pathways as flux
             v['example_f'].flux = v['count_f']

@@ -116,7 +116,7 @@ def blocked_reactions_analysis(
             v[j].upBound = 0
 
     # Fix stoichiometry of source/sink metabolites
-    for j, bounds in specific_bounds.iteritems():
+    for j, bounds in specific_bounds.items():
         v[j].lowBound = bounds['LB']
         v[j].upBound = bounds['UB']
 
@@ -154,7 +154,7 @@ def blocked_reactions_analysis(
                     continue
                 label = "mass_balance_%s" % i
                 dot_S_v = pulp.lpSum([database.S[i][j] * vt[j]
-                                      for j in database.S[i].keys()])
+                                      for j in list(database.S[i].keys())])
                 condition = dot_S_v == 0
                 lp_prob += condition, label
 

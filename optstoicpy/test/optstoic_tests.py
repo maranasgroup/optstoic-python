@@ -3,6 +3,7 @@ pip install nose
 
 nosetests optstoic_tests.py
 """
+from builtins import object
 from nose.tools import (
     assert_equal,
     assert_in,
@@ -18,7 +19,7 @@ from optstoicpy.script.solver import load_pulp_solver
 import optstoicpy.script.optstoic_glycolysis as osgly
 import optstoicpy.script.optstoic as optstoic
 
-class TestOptStoic:
+class TestOptStoic(object):
     def setup(self):
         self.logger = create_logger(name='Test generalized optstoic')
         self.DB = self.test_load_database()

@@ -3,6 +3,7 @@ pip install nose
 
 nosetests drawpathway_tests.py
 """
+from builtins import object
 import os
 from nose.tools import (
     assert_equal,
@@ -15,7 +16,7 @@ from optstoicpy.core.pathway import Pathway
 from optstoicpy.core.drawpathway import (
     draw_pathway)
 
-class TestDrawPathway:
+class TestDrawPathway(object):
     def setup(self):
         self.logger = create_logger(name='Test core.drawpathway')
         self.pathway_fixture = {'flux': [-1.0, 1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0,

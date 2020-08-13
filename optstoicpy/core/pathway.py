@@ -1,4 +1,7 @@
 from __future__ import division
+from builtins import map
+from builtins import zip
+from builtins import object
 from .reaction import Reaction
 from .config import cofactors, default_params, rxnSji
 import os
@@ -77,7 +80,7 @@ class Pathway(object):
             self.total_flux_no_exchange = total_flux_no_exchange
 
 
-        self.rxn_flux_dict = dict(zip(self.reaction_ids, self.fluxes))
+        self.rxn_flux_dict = dict(list(zip(self.reaction_ids, self.fluxes)))
 
         try:
             self.nATP = self.rxn_flux_dict['EX_atp']
@@ -90,7 +93,7 @@ class Pathway(object):
         """
         return a dictionary of the {reaction:flux}
         """
-        return dict(zip(self.reaction_ids, self.fluxes))
+        return dict(list(zip(self.reaction_ids, self.fluxes)))
 
     def update_nATP(self):
 
@@ -278,14 +281,14 @@ C_RANGE\t\t{C_RANGE[0]:.0e} {C_RANGE[1]:.0e}\n""".format(**params)
         all_bounds = params['RATIO_BOUND']
 
         # write the ratios
-        for i, (cids, ratios) in enumerate(sorted(params['RATIO'].iteritems())):
+        for i, (cids, ratios) in enumerate(sorted(params['RATIO'].items())):
             if i == 0:
                 modeltext += "RATIO\t\t{C[0]} {C[1]} {B[0]:e} {B[1]:e}\n".format(C=cids, B=ratios)
             else:
                 modeltext += "\t\t\t{C[0]} {C[1]} {B[0]:e} {B[1]:e}\n".format(C=cids, B=ratios)
 
     # write the bounds
-    for i, (cid, bounds) in enumerate(sorted(all_bounds.iteritems())):
+    for i, (cid, bounds) in enumerate(sorted(all_bounds.items())):
         if i == 0:
             modeltext += "BOUND\t\t{0} {1[0]:e} {1[1]:e}\n".format(cid, bounds)
         else:

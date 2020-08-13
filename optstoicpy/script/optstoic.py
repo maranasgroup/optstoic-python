@@ -18,6 +18,8 @@ Change the number of Thread for gurobi if needed.
 
 """
 from __future__ import absolute_import
+from builtins import range
+from builtins import object
 import os
 import time
 import sys
@@ -221,7 +223,7 @@ class OptStoic(object):
                 v[j].upBound = 0
 
         # Fix stoichiometry of source/sink metabolites
-        for rxn, bounds in self.specific_bounds.iteritems():
+        for rxn, bounds in self.specific_bounds.items():
             v[rxn].lowBound = bounds['LB']
             v[rxn].upBound = bounds['UB']
 
@@ -260,7 +262,7 @@ class OptStoic(object):
                 continue
             label = "mass_balance_%s" % i
             dot_S_v = pulp.lpSum([self.database.S[i][j] * v[j]
-                                  for j in self.database.S[i].keys()])
+                                  for j in list(self.database.S[i].keys())])
             condition = dot_S_v == 0
             lp_prob += condition, label
 
@@ -292,7 +294,7 @@ class OptStoic(object):
             for l in self.database.loops:
                 label = "loopless_cons_%s" % l
                 dot_N_G = pulp.lpSum([self.database.Ninternal[l][j] * G[j]
-                                      for j in self.database.Ninternal[l].keys()])
+                                      for j in list(self.database.Ninternal[l].keys())])
                 condition = dot_N_G == 0
                 lp_prob += condition, label
 
@@ -347,7 +349,7 @@ class OptStoic(object):
                                  'iteration. Increase max_iteration '
                                  'before solving!')
 
-            for ind, pathway in self.pathways.iteritems():
+            for ind, pathway in self.pathways.items():
                 rxnlist = list(set(pathway.reaction_ids_no_exchange))
                 condition = pulp.lpSum(
                     [(1 - yf[j] - yb[j]) for j in rxnlist]) >= 1
@@ -423,7 +425,7 @@ class OptStoic(object):
     def write_pathways_to_json(self, json_filename="temp_pathways.json"): 
 
         temp = {}
-        for k in self.pathways.keys(): 
+        for k in list(self.pathways.keys()): 
             temp[k] = self.pathways[k].to_dict()
 
         json.dump(temp,
@@ -444,7 +446,7 @@ class OptStoic(object):
             ValueError: Description
         """
         if (isinstance(user_defined_pathways, dict) and (
-                isinstance(user_defined_pathways.values()[0], Pathway))):
+                isinstance(list(user_defined_pathways.values())[0], Pathway))):
             self.pathways = copy.deepcopy(user_defined_pathways)
         else:
             raise ValueError("user_defined_pathways must be a dictionary of Pathway instances")
@@ -505,7 +507,7 @@ class OptStoic(object):
                                  'iteration. Increase max_iteration '
                                  'before solving!')
 
-            for ind, pathway in self.pathways.iteritems():
+            for ind, pathway in self.pathways.items():
                 rxnlist = list(set(pathway.reaction_ids_no_exchange))
                 condition = pulp.lpSum(
                     [(1 - yf[j] - yb[j]) for j in rxnlist]) >= 1
