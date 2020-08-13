@@ -3,21 +3,15 @@ pip install nose
 
 nosetests drawpathway_tests.py
 """
-from builtins import object
 import os
-from nose.tools import (
-    assert_equal,
-    assert_in,
-    assert_not_equal,
-    nottest
-    )
+import unittest
 from optstoicpy.script.utils import create_logger
 from optstoicpy.core.pathway import Pathway
 from optstoicpy.core.drawpathway import (
     draw_pathway)
 
-class TestDrawPathway(object):
-    def setup(self):
+class TestDrawPathway(unittest.TestCase):
+    def setUp(self):
         self.logger = create_logger(name='Test core.drawpathway')
         self.pathway_fixture = {'flux': [-1.0, 1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0,
                                 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, 2.0, 1.0,
@@ -45,7 +39,7 @@ class TestDrawPathway(object):
             darkBackgroundMode=False)
 
         fname = 'test_pathway.png'
-        assert_equal(os.path.exists(fname), True)
+        self.assertEqual(os.path.exists(fname), True)
 
         # if os.path.exists(fname):
         #     os.remove(fname)

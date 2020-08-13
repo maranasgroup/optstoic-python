@@ -21,6 +21,8 @@ from optstoicpy.script.utils import create_logger
 
 def test_all_optimization_scripts():
     """This is written to bypass nosetests issue with PULP/SCIP-CMD.
+    
+    TODO: Figure out what happened with SCIP-CMD and consolidate this with optstoic_tests.py
     """
     logger = create_logger(name="optstoicpy.test.testAll")
 

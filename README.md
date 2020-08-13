@@ -5,40 +5,43 @@ Perform optStoic analysis using Python code that share the same data files with 
 Note: All the examples are specific for glycolysis pathway generation. 
 
 ## Install
-- Next, setup a virtual environment in Python 2.7.
+- Next, setup a virtual environment in Python 3.
 ```bash
-# Install the virtualenv package
-pip install virtualenv
-# Test virtualenv
-virtualenv --version
 # Create a project folder
 cd project_folder
 # Create a virtual environment call optstoic_env
-virtualenv optstoic_env
+python3 -m venv optstoic_env
 # Activate your environment
 source optstoic_env/bin/activate
 ```
 
-- Then, install one of the solvers in the following section.
+- Then, install one of the solvers in the following [Solver Requirement](#solver-requirement) section.
 
+- (Optional) Install the Graphviz package for pathway visualization. See the [Additional Project Dependencies](#additional-project-dependencies) section.
 
 - Next, clone this repository in your `project_folder` and setup. This should install all the Python dependencies.
 ```
 cd project_folder
+# Activate your environment
+source optstoic_env/bin/activate
+# Clone the repo
 git clone https://github.com/maranasgroup/optstoic-python.git
 cd optstoic-python
 python setup.py install
 ```
 
-- To run nosetests after setup, you need to run setup as below:
+- To run nosetests after setup:
 ```
-python setup.py test
+pip install nose
+cd project_folder/optstoic-python
+nosetests -s -v
 ```
 
-## Requirement
+## Solver requirement
 At least one of the following optimization solvers should be installed. To solve the loopless optStoic formulation, an optimization solver other than GLPK is recommended.
 
 1. GLPK 4.47 installation
+   - Linux: 
     ```bash
     wget  http://ftp.gnu.org/gnu/glpk/glpk-4.47.tar.gz
     tar -xvzf glpk-4.47.tar.gz
@@ -47,6 +50,12 @@ At least one of the following optimization solvers should be installed. To solve
     make
     make install
     #if the program is successfully installed, you should get an output by typing
+    glpsol --version
+    ```
+    - Mac: 
+    ```
+    brew install glpk
+    # If success
     glpsol --version
     ```
 
@@ -66,10 +75,11 @@ sudo make install INSTALLDIR="/usr/local/"
 
 4. [CPLEX Optimizer](https://www.ibm.com/analytics/cplex-optimizer)
 
-## Current project dependencies
+## Additional project dependencies
 1. [PuLP](https://github.com/coin-or/pulp). Run the [test](https://www.coin-or.org/PuLP/main/installing_pulp_at_home.html#testing-your-pulp-installation).
 
 2. Graphviz (Optional, for drawing pathway). The [Graphviz](https://www.graphviz.org/) software is required before installing the graphviz python package. 
+    - Linux
     ```bash
     #If you have root access
     sudo apt-get install graphviz
@@ -91,6 +101,8 @@ sudo make install INSTALLDIR="/usr/local/"
     #Install the Python graphviz package
     pip install graphviz
     ```
+    - Mac: `brew install graphviz`
+
 
 3. [Component-Contribution](https://github.com/eladnoor/component-contribution) (*Optional, unless you want to perform MDF analysis)
 
@@ -109,6 +121,16 @@ test_all_optimization_scripts()
 
 ## Usage
 Read the [tutorial](https://github.com/maranasgroup/optstoic-python/blob/master/optstoicpy/examples/methods.md).
+
+## Jupyter notebook setup
+```
+cd project_folder
+# Activate your environment
+source optstoic_env/bin/activate
+pip install notebook
+pip install ipykernel
+python -m ipykernel install --user --name optstoic_env --display-name "Python (optstoic)"
+```
 
 ## Development
 To continue development with the code, please create a virtual environment and use `python setup.py develop` for installation.

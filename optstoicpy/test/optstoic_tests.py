@@ -3,14 +3,7 @@ pip install nose
 
 nosetests optstoic_tests.py
 """
-from builtins import object
-from nose.tools import (
-    assert_equal,
-    assert_in,
-    assert_not_equal,
-    nottest,
-    set_trace
-    )
+import unittest
 from optstoicpy.core.database import (
     load_db_v3,
     Database)
@@ -19,18 +12,22 @@ from optstoicpy.script.solver import load_pulp_solver
 import optstoicpy.script.optstoic_glycolysis as osgly
 import optstoicpy.script.optstoic as optstoic
 
-class TestOptStoic(object):
-    def setup(self):
+
+class TestOptStoic(unittest.TestCase):
+    def setUp(self):
         self.logger = create_logger(name='Test generalized optstoic')
         self.DB = self.test_load_database()
-        self.pulp_solver = self.test_pulp_solver_loading()        
+        self.pulp_solver = self.load_solver()
+
+    def load_solver(self):
+        return load_pulp_solver(
+            solver_names=['SCIP_CMD', 'GUROBI', 'GUROBI_CMD', 'CPLEX_CMD', 'GLPK_CMD'])      
 
     def test_pulp_solver_loading(self):
         self.logger.info("Test loading PuLP solver(s)")
 
-        pulp_solver = load_pulp_solver(
-            solver_names=['SCIP_CMD', 'GUROBI', 'GUROBI_CMD', 'CPLEX_CMD', 'GLPK_CMD'])
-        assert_not_equal(pulp_solver, None)
+        pulp_solver = self.load_solver()
+        self.assertNotEqual(pulp_solver, None)
         return pulp_solver
 
     def test_load_database(self):
@@ -58,7 +55,7 @@ class TestOptStoic(object):
         # assert_equal(len(DB.reactions), 7175)
         return DB
 
-    @nottest
+    @unittest.skip("Skip optstoic setup")
     def test_optstoic_setup(self):
         model = osgly.OptStoicGlycolysis(
                         objective='MinFlux',
@@ -72,9 +69,9 @@ class TestOptStoic(object):
         lp_prob, pathways = model.solve(
             outputfile='test_optstoic.txt')
 
-        assert_equal(pathways[1]['modelstat'], 'Optimal')
+        self.assertEqual(pathways[1]['modelstat'], 'Optimal')
 
-    @nottest
+    @unittest.skip("Skip optstoic setup")
     def test_general_optstoic_setup(self):        
 
         custom_flux_constraints = [
@@ -122,4 +119,4 @@ class TestOptStoic(object):
         lp_prob, pathways = model.solve(
             outputfile='test_optstoic_general.txt')
 
-        assert_equal(pathways[1]['modelstat'], 'Optimal')
+        self.assertEqual(pathways[1]['modelstat'], 'Optimal')
