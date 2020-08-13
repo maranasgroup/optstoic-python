@@ -8,6 +8,20 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(current_dir, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
+install_requires = [
+    'pandas>=0.18.0',
+    'scipy>=0.17.0',
+    'numpy>=1.11.1',
+    'sympy',
+    'graphviz>=0.4.8',
+    'PuLP>=1.6.1',
+    'future'
+]
+
+test_requires = [
+    'nose'
+]
+
 setup(
     name='optstoicpy',
     version='0.5.0',
@@ -28,27 +42,9 @@ setup(
                                      'data',
                                      'docs',
                                      'examples']),
-    # List run-time dependencies here.  These will be installed by pip when
-    # your project is installed. For an analysis of "install_requires" vs pip's
-    # requirements files see:
-    # https://packaging.python.org/en/latest/requirements.html
-    install_requires=[ 'pandas>=0.18.0',
-                       'scipy>=0.17.0',
-                       'numpy>=1.11.1',
-                       'sympy',
-                       'graphviz>=0.4.8',
-                       'PuLP>=1.6.1'],
-
-    # List additional groups of dependencies here (e.g. development
-    # dependencies). You can install these using the following syntax,
-    # for example:
-    # $ pip install -e .[dev,test]
+    install_requires=install_requires,
     test_suite='nose.collector',
-    tests_require=['nose'],
-
-    # If there are data files included in your packages that need to be
-    # installed, specify them here.  If using Python 2.6 or less, then these
-    # have to be included in MANIFEST.in as well.
+    tests_require=test_requires,
     package_dir={'optstoicpy': 'optstoicpy'},
     package_data={
         'optstoicpy': [ 'data/*.csv',

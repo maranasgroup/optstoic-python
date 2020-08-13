@@ -5,12 +5,6 @@ Perform optStoic analysis using Python code that share the same data files with 
 Note: All the examples are specific for glycolysis pathway generation. 
 
 ## Install
-- First, check if you are using Python 2.7.
-```bash
-python --version
-# returns Python 2.7.16
-```
-
 - Next, setup a virtual environment in Python 2.7.
 ```bash
 # Install the virtualenv package
@@ -74,16 +68,8 @@ sudo make install INSTALLDIR="/usr/local/"
 
 ## Current project dependencies
 1. [PuLP](https://github.com/coin-or/pulp). Run the [test](https://www.coin-or.org/PuLP/main/installing_pulp_at_home.html#testing-your-pulp-installation).
-```
-pip install pulp
-```
 
-2. [pandas](https://pandas.pydata.org/)
-```
-pip install pandas
-```
-
-3. Graphviz (Optional, for drawing pathway). The [Graphviz](https://www.graphviz.org/) software is required before installing the graphviz python package. 
+2. Graphviz (Optional, for drawing pathway). The [Graphviz](https://www.graphviz.org/) software is required before installing the graphviz python package. 
     ```bash
     #If you have root access
     sudo apt-get install graphviz
@@ -106,7 +92,7 @@ pip install pandas
     pip install graphviz
     ```
 
-4. [Component-Contribution](https://github.com/eladnoor/component-contribution) (*Optional, unless you want to perform MDF analysis)
+3. [Component-Contribution](https://github.com/eladnoor/component-contribution) (*Optional, unless you want to perform MDF analysis)
 
 ## Tests
 After cloning the repo or setup, please run tests as followed:

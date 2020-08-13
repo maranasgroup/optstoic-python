@@ -118,7 +118,7 @@ class BaseReactionDatabase(object):
         # Update to pandas 0.19 (using sparse dataframe)
         df_Sji = pd.DataFrame(Sji).T
         Sij = dict(
-            (k, v.dropna().to_dict()) for k, v in pd.compat.iteritems(df_Sji)
+            (k, v.dropna().to_dict()) for k, v in df_Sji.items()
         )
         return Sij
 
