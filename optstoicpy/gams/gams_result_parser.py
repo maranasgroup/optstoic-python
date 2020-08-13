@@ -1,3 +1,4 @@
+from __future__ import print_function
 from optstoicpy.core.reaction import Reaction
 from optstoicpy.core.pathway import Pathway, generate_kegg_model
 from optstoicpy.core.drawpathway import *
@@ -28,7 +29,7 @@ def fix_incomplete_json(inputfilename, outputfilename):
 
         if last_complete_entry_index == 0:
         #if unable to find any of them
-            print "There is no complete entry in the json file. Quit program."
+            print("There is no complete entry in the json file. Quit program.")
             return None
 
         newtemp = temp[0: -last_complete_entry_index]
@@ -50,7 +51,7 @@ def fix_incomplete_json(inputfilename, outputfilename):
             output.close()
         else:
 
-            print "The JSON file is valid."
+            print("The JSON file is valid.")
         return temp
 
 def make_integer_cut(resultDict, outputfname):
@@ -192,5 +193,5 @@ if __name__ == "__main__":
     res = []
     for cpath in all_pathways:
         if EDpath.is_same_pathway_with(cpath):
-            print cpath
+            print(cpath)
         res.append(EDpath.get_pathway_similarity_index(cpath))

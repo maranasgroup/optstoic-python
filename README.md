@@ -5,10 +5,40 @@ Perform optStoic analysis using Python code that share the same data files with 
 Note: All the examples are specific for glycolysis pathway generation. 
 
 ## Install
+- First, check if you are using Python 2.7.
+```bash
+python --version
+# returns Python 2.7.16
 ```
+
+- Next, setup a virtual environment in Python 2.7.
+```bash
+# Install the virtualenv package
+pip install virtualenv
+# Test virtualenv
+virtualenv --version
+# Create a project folder
+cd project_folder
+# Create a virtual environment call optstoic_env
+virtualenv optstoic_env
+# Activate your environment
+source optstoic_env/bin/activate
+```
+
+- Then, install one of the solvers in the following section.
+
+
+- Next, clone this repository in your `project_folder` and setup. This should install all the Python dependencies.
+```
+cd project_folder
 git clone https://github.com/maranasgroup/optstoic-python.git
 cd optstoic-python
 python setup.py install
+```
+
+- To run nosetests after setup, you need to run setup as below:
+```
+python setup.py test
 ```
 
 ## Requirement

@@ -9,6 +9,7 @@ Tip:
 Change the number of Thread for gurobi if needed.
 
 """
+from __future__ import absolute_import
 import os
 import time
 import sys
@@ -17,14 +18,14 @@ import random
 import string  # to generate random hex code
 import pulp
 # import cPickle as pickle
-import gams_parser
+from . import gams_parser
 import json
 #import pdb
 from optstoicpy.core import database
 from optstoicpy.script.utils import create_logger
 from optstoicpy.script.solver import load_pulp_solver
 from optstoicpy.script.optstoic import OptStoic
-from gurobi_command_line_solver import *
+from .gurobi_command_line_solver import *
 
 class OptStoicGlycolysis(OptStoic):
 

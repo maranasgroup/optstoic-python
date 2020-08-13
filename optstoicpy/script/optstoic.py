@@ -17,6 +17,7 @@ Tip:
 Change the number of Thread for gurobi if needed.
 
 """
+from __future__ import absolute_import
 import os
 import time
 import sys
@@ -31,7 +32,7 @@ from optstoicpy.core.database import load_db_v3
 from optstoicpy.core.pathway import Pathway
 from optstoicpy.script.utils import create_logger
 from optstoicpy.script.solver import load_pulp_solver
-from gurobi_command_line_solver import *
+from .gurobi_command_line_solver import *
 
 # Global variables/solver options
 EPS = 1e-5

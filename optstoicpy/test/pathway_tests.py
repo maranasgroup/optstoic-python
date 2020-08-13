@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 from nose.tools import (
     assert_equal,
@@ -51,7 +52,7 @@ class TestPathway:
         filename = "./test_kegg_model_generation.txt"
         f = open(filename, 'a+')
         kegg_model_text = generate_kegg_model(self.p1, filehandle=f)
-        print kegg_model_text
+        print(kegg_model_text)
         assert_in('R01512', kegg_model_text)
         assert_in('R01512', kegg_model_text)
         f.close()

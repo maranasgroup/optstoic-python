@@ -1,3 +1,7 @@
+.eggs/
+build/
+dist/
+*.bak
 *.pyc
 */*.pyc
 */**/*.pyc

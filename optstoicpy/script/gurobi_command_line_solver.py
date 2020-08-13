@@ -3,6 +3,7 @@
 Using Gurobi command line (gurobi_cl) to solve lp problem generated with Pulp.
 This is written to solve the issue of unable to install Gurobi in Cygwin.
 """
+from __future__ import print_function
 import os
 import pdb
 import sys
@@ -40,10 +41,10 @@ def solve_with_gurobi_cl(lp_filename, options='Threads=2 TimeLimit=1200 MIPGapAb
     #exitCode = process.returncode
 
     if verbose:
-        print stdout
+        print(stdout)
 
     if stderr:
-        print stderr
+        print(stderr)
 
     #Iteration limit reached
     if 'Optimal solution found' in stdout:
@@ -58,7 +59,7 @@ def parse_gurobi_sol(sol_filename):
     try:
         f = open(sol_filename+'.sol', 'rU')
     except IOError:
-        print "%s.sol is not in the current directory." %sol_filename
+        print("%s.sol is not in the current directory." %sol_filename)
         return None
 
     data = f.read().splitlines()

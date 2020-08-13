@@ -1,6 +1,7 @@
 """Analyze similarity index between different set of pathways.
 Compare and combine pathways from different parallel simulation (e.g. python and gams).
 """
+from __future__ import print_function
 import matplotlib
 #matplotlib.use('SVG')
 matplotlib.use('Agg')
@@ -71,7 +72,7 @@ def get_unique_pathways_from_list(pathwayObjList, update_unique_id=True, sort_by
         for i, p in enumerate(all_unique_pathways, start=1):
             p.id = i
 
-    print len(all_unique_pathways)
+    print(len(all_unique_pathways))
     #unique_pathway_similarity_mat = get_pathway_identity_matrix(all_unique_pathways, symmetry=True)
     #fig = plot_single_similarity_matrix(unique_pathway_similarity_mat, nATP=1)
     #fig.savefig('after_sim.png')
@@ -124,7 +125,7 @@ def find_identical_pathways_and_get_unique_pathways(pres, gres):
         p.id = len(gres) + i
         all_unique_pathways.append(p)
 
-    print len(all_unique_pathways)
+    print(len(all_unique_pathways))
 
     return similarity_mat, all_unique_pathways
 
@@ -207,13 +208,13 @@ def draw_all_pathways(pathway_set, outputFilePath, cutoff=0):
     outputFilePath -- output file path
     cutoff -- id cutoff for drawing pathway
     """
-    print "Drawing all pathways. Be patient..."
+    print("Drawing all pathways. Be patient...")
     for p in pathway_set:
         if p.id > cutoff:
             graph_title = "Final_{0}_P{1}".format(p.name, p.id)
             draw_pathway(p, os.path.join(outputFilePath, '/pathway_{0:03d}'.format(p.id)),
                         imageFormat='png', graphTitle=graph_title, cleanup=True, darkBackgroundMode=False)
-    print "Done!"
+    print("Done!")
 
     return 1
 
@@ -226,13 +227,13 @@ def draw_selected_pathways(pathway_set, outputFilePath, selected_ids=[],
     outputFilePath -- output file path
     cutoff - id cutoff for drawing pathway
     """
-    print "Drawing all selected pathways. Be patient..."
+    print("Drawing all selected pathways. Be patient...")
     for p in pathway_set:
         if p.id in selected_ids:
             graph_title = "Final_{0}_P{1}".format(p.name, p.id)
             draw_pathway(p, os.path.join(outputFilePath, file_prefix+'{0:03d}'.format(p.id)),
                         imageFormat=imageFormat, graphTitle=graph_title, cleanup=True, darkBackgroundMode=darkBackgroundMode)
-    print "Done!"
+    print("Done!")
 
     return 1
 

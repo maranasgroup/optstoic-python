@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import json
 import copy
@@ -179,9 +180,9 @@ class BaseReactionDatabase(object):
             return None
         else:
             if verbose:
-                print "Reaction: {0} is ({1}) {2}".format(
+                print("Reaction: {0} is ({1}) {2}".format(
                     rid, self.rxntype[rid], self.REACTION_TYPE.get(self.rxntype[rid])
-                )
+                ))
             return self.rxntype[rid]
 
     def set_reaction_type(self, rid, rxntype):
