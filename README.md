@@ -21,6 +21,8 @@ source optstoic_env/bin/activate
 
 - Next, clone this repository in your `project_folder` and setup. This should install all the Python dependencies.
 ```
+# Create a new project folder
+mkdir project_folder
 cd project_folder
 # Activate your environment
 source optstoic_env/bin/activate
