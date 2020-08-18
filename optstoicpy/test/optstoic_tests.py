@@ -32,7 +32,7 @@ class TestOptStoic(unittest.TestCase):
             'EX_hplus': {'C00080': -1.0},
             'EX_nadp': {'C00006': -1.0},
             'EX_nadph': {'C00005': -1.0}
-            }
+        }
 
         DB = load_db_v3(
             reduce_model_size=True,
@@ -59,7 +59,8 @@ class TestOptStoic(unittest.TestCase):
             outputfile='test_optstoic.txt')
 
         if sys.platform == 'cygwin':
-            lp_prob, pathways = model.solve_gurobi_cl(outputfile='test_optstoic_cyg.txt', cleanup=False)
+            lp_prob, pathways = model.solve_gurobi_cl(
+                outputfile='test_optstoic_cyg.txt', cleanup=False)
             #test.max_iteration = test.max_iteration + 2
             #lp_prob, pathways = test.solve_gurobi_cl(outputfile='test_optstoic_cyg.txt', exclude_existing_solution=True, cleanup=False)
         else:
@@ -72,7 +73,7 @@ class TestOptStoic(unittest.TestCase):
     @unittest.skip("Skip optstoic setup")
     def test_general_optstoic(self):
         """Test optstoic analysis with standard setup
-        
+
         How to add custom flux constraints:
         E.g.,
         v('EX_nadph') + v('EX_nadh') = 2;
@@ -83,7 +84,7 @@ class TestOptStoic(unittest.TestCase):
         lp_prob += v['EX_nadph'] + v['EX_nadh'] == 2, 'nadphcons1'
         lp_prob += v['EX_nadp'] + v['EX_nad'] == -2, 'nadphcons2'
         lp_prob += v['EX_nadh'] + v['EX_nad'] == 0, 'nadphcons3'
-        lp_prob += v['EX_nadph'] + v['EX_nadp'] == 0, 'nadphcons4' 
+        lp_prob += v['EX_nadph'] + v['EX_nadp'] == 0, 'nadphcons4'
         """
         self.DB = self.load_database()
 
@@ -93,29 +94,52 @@ class TestOptStoic(unittest.TestCase):
              'UB': 2,
              'LB': 2},
             {'constraint_name': 'nadphcons2',
-            'reactions': ['EX_nadp', 'EX_nad'],
-            'UB': -2,
-            'LB': -2},
+             'reactions': ['EX_nadp', 'EX_nad'],
+             'UB': -2,
+             'LB': -2},
             {'constraint_name': 'nadphcons3',
-            'reactions': ['EX_nadh', 'EX_nad'],
-            'UB': 0,
-            'LB': 0},
+             'reactions': ['EX_nadh', 'EX_nad'],
+             'UB': 0,
+             'LB': 0},
             {'constraint_name': 'nadphcons4',
-            'reactions': ['EX_nadph', 'EX_nadp'],
-            'UB': 0,
-            'LB': 0}]
+             'reactions': ['EX_nadph', 'EX_nadp'],
+             'UB': 0,
+             'LB': 0}]
 
-        specific_bounds = {'EX_glc': {'LB': -1, 'UB': -1},
-                        'EX_pyruvate': {'LB': 2, 'UB': 2},
-                        'EX_nad': {'LB': -2, 'UB': 0},
-                        'EX_nadh': {'LB': 0, 'UB': 2},
-                        'EX_nadp': {'LB': -2, 'UB': 0},
-                        'EX_nadph': {'LB': 0, 'UB': 2},
-                        'EX_adp': {'LB': -1, 'UB': -1},
-                        'EX_phosphate': {'LB': -1, 'UB': -1},
-                        'EX_atp': {'LB': 1, 'UB': 1},
-                        'EX_h2o': {'LB': 1, 'UB': 1},
-                        'EX_hplus': {'LB': -10, 'UB': 10}} #pulp/gurobi has issue with "h+"
+        specific_bounds = {
+            'EX_glc': {
+                'LB': -1,
+                'UB': -1},
+            'EX_pyruvate': {
+                'LB': 2,
+                'UB': 2},
+            'EX_nad': {
+                'LB': -2,
+                'UB': 0},
+            'EX_nadh': {
+                'LB': 0,
+                'UB': 2},
+            'EX_nadp': {
+                'LB': -2,
+                'UB': 0},
+            'EX_nadph': {
+                'LB': 0,
+                'UB': 2},
+            'EX_adp': {
+                'LB': -1,
+                'UB': -1},
+            'EX_phosphate': {
+                'LB': -1,
+                'UB': -1},
+            'EX_atp': {
+                'LB': 1,
+                'UB': 1},
+            'EX_h2o': {
+                'LB': 1,
+                'UB': 1},
+            'EX_hplus': {
+                'LB': -10,
+                'UB': 10}}  # pulp/gurobi has issue with "h+"
 
         model = opts.OptStoic(
             database=self.DB,
@@ -131,10 +155,12 @@ class TestOptStoic(unittest.TestCase):
             logger=self.logger)
 
         if sys.platform == 'cygwin':
-            lp_prob, pathways = model.solve_gurobi_cl(outputfile='test_optstoic_general_cyg.txt', cleanup=False)
+            lp_prob, pathways = model.solve_gurobi_cl(
+                outputfile='test_optstoic_general_cyg.txt', cleanup=False)
             #test.max_iteration = test.max_iteration + 2
             #lp_prob, pathways = test.solve_gurobi_cl(outputfile='test_optstoic_general_cyg.txt', exclude_existing_solution=True, cleanup=False)
         else:
-            lp_prob, pathways = model.solve(outputfile='test_optstoic_general.txt')
+            lp_prob, pathways = model.solve(
+                outputfile='test_optstoic_general.txt')
 
         self.assertEqual(pathways[1]['modelstat'], 'Optimal')
