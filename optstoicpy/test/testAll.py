@@ -26,9 +26,6 @@ def test_all_optimization_scripts():
     """
     logger = create_logger(name="optstoicpy.test.testAll")
 
-    logger.info("Test blocked_reactions_analysis.")
-    blocked_reactions_list, FVA_res = test_blocked_reactions_analysis()
-
     logger.info("Test optstoic")
     lp_prob1, pathways1 = optstoic.test_optstoic()
 

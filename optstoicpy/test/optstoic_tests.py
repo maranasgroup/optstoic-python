@@ -1,36 +1,23 @@
-"""
-pip install nose
-
-nosetests optstoic_tests.py
-"""
+import sys
 import unittest
 from optstoicpy.core.database import (
     load_db_v3,
     Database)
 from optstoicpy.script.utils import create_logger
-from optstoicpy.script.solver import load_pulp_solver
-import optstoicpy.script.optstoic_glycolysis as osgly
-import optstoicpy.script.optstoic as optstoic
+from optstoicpy.script.solver import (
+    load_pulp_solver,
+    ORDERED_SOLVERS)
+import optstoicpy.script.optstoic_glycolysis as optsg
+import optstoicpy.script.optstoic as opts
 
 
 class TestOptStoic(unittest.TestCase):
     def setUp(self):
         self.logger = create_logger(name='Test generalized optstoic')
-        self.DB = self.test_load_database()
-        self.pulp_solver = self.load_solver()
+        self.pulp_solver = load_pulp_solver(
+            solver_names=ORDERED_SOLVERS)
 
-    def load_solver(self):
-        return load_pulp_solver(
-            solver_names=['SCIP_CMD', 'GUROBI', 'GUROBI_CMD', 'CPLEX_CMD', 'GLPK_CMD'])      
-
-    def test_pulp_solver_loading(self):
-        self.logger.info("Test loading PuLP solver(s)")
-
-        pulp_solver = self.load_solver()
-        self.assertNotEqual(pulp_solver, None)
-        return pulp_solver
-
-    def test_load_database(self):
+    def load_database(self):
         self.logger.info("Test loading Database")
 
         user_defined_export_rxns_Sji = {
@@ -56,23 +43,49 @@ class TestOptStoic(unittest.TestCase):
         return DB
 
     @unittest.skip("Skip optstoic setup")
-    def test_optstoic_setup(self):
-        model = osgly.OptStoicGlycolysis(
-                        objective='MinFlux',
-                        nATP=1,
-                        zlb=10,
-                        max_iteration=1,
-                        pulp_solver=self.pulp_solver,
-                        result_filepath=None,
-                        M=1000)
+    def test_optstoic_glycolysis(self):
+        """Test optstoic for glycolysis pathway."""
+
+        model = optsg.OptStoicGlycolysis(
+            objective='MinFlux',
+            nATP=1,
+            zlb=10,
+            max_iteration=1,
+            pulp_solver=self.pulp_solver,
+            result_filepath=None,
+            M=1000)
 
         lp_prob, pathways = model.solve(
             outputfile='test_optstoic.txt')
 
+        if sys.platform == 'cygwin':
+            lp_prob, pathways = model.solve_gurobi_cl(outputfile='test_optstoic_cyg.txt', cleanup=False)
+            #test.max_iteration = test.max_iteration + 2
+            #lp_prob, pathways = test.solve_gurobi_cl(outputfile='test_optstoic_cyg.txt', exclude_existing_solution=True, cleanup=False)
+        else:
+            lp_prob, pathways = model.solve(outputfile='test_optstoic.txt')
+            #test.max_iteration = test.max_iteration + 1
+            #lp_prob, pathways = test.solve(outputfile='test_optstoic.txt', exclude_existing_solution=True)
+
         self.assertEqual(pathways[1]['modelstat'], 'Optimal')
 
     @unittest.skip("Skip optstoic setup")
-    def test_general_optstoic_setup(self):        
+    def test_general_optstoic(self):
+        """Test optstoic analysis with standard setup
+        
+        How to add custom flux constraints:
+        E.g.,
+        v('EX_nadph') + v('EX_nadh') = 2;
+        v('EX_nadp') + v('EX_nad') = -2;
+        v('EX_nadh') + v('EX_nad') = 0;
+        v('EX_nadph') + v('EX_nadp') = 0;
+        became
+        lp_prob += v['EX_nadph'] + v['EX_nadh'] == 2, 'nadphcons1'
+        lp_prob += v['EX_nadp'] + v['EX_nad'] == -2, 'nadphcons2'
+        lp_prob += v['EX_nadh'] + v['EX_nad'] == 0, 'nadphcons3'
+        lp_prob += v['EX_nadph'] + v['EX_nadp'] == 0, 'nadphcons4' 
+        """
+        self.DB = self.load_database()
 
         custom_flux_constraints = [
             {'constraint_name': 'nadphcons1',
@@ -104,19 +117,24 @@ class TestOptStoic(unittest.TestCase):
                         'EX_h2o': {'LB': 1, 'UB': 1},
                         'EX_hplus': {'LB': -10, 'UB': 10}} #pulp/gurobi has issue with "h+"
 
-        model = optstoic.OptStoic(database=self.DB,
-                        objective='MinFlux',
-                        zlb=None,
-                        specific_bounds=specific_bounds,
-                        custom_flux_constraints=custom_flux_constraints,
-                        add_loopless_constraints=False,
-                        max_iteration=1,
-                        pulp_solver=self.pulp_solver,
-                        result_filepath='./result/',
-                        M=1000,
-                        logger=self.logger)
+        model = opts.OptStoic(
+            database=self.DB,
+            objective='MinFlux',
+            zlb=None,
+            specific_bounds=specific_bounds,
+            custom_flux_constraints=custom_flux_constraints,
+            add_loopless_constraints=False,
+            max_iteration=1,
+            pulp_solver=self.pulp_solver,
+            result_filepath='./result/',
+            M=1000,
+            logger=self.logger)
 
-        lp_prob, pathways = model.solve(
-            outputfile='test_optstoic_general.txt')
+        if sys.platform == 'cygwin':
+            lp_prob, pathways = model.solve_gurobi_cl(outputfile='test_optstoic_general_cyg.txt', cleanup=False)
+            #test.max_iteration = test.max_iteration + 2
+            #lp_prob, pathways = test.solve_gurobi_cl(outputfile='test_optstoic_general_cyg.txt', exclude_existing_solution=True, cleanup=False)
+        else:
+            lp_prob, pathways = model.solve(outputfile='test_optstoic_general.txt')
 
         self.assertEqual(pathways[1]['modelstat'], 'Optimal')
