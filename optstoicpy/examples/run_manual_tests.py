@@ -15,9 +15,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_all_optimization_scripts():
-    """This is written to bypass nosetests issue with PULP/SCIP-CMD.
-
-    TODO: Figure out what happened with SCIP-CMD and consolidate this with optstoic_tests.py
+    """TODO: To be deprecated or convert to example in Jupyter notebook.
     """
     logger = create_logger(name="optstoicpy.test.testAll")
 
