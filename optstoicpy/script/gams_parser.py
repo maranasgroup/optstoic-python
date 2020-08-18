@@ -19,6 +19,7 @@ from optstoicpy.core.reaction import *
 #         if (not line.startswith("*") and len(line.strip())> 0)]
 #     return data
 
+
 def convert_set_to_list(filename):
     """
     replacing function parse_gams_input_remove_comment_and_quotes
@@ -37,8 +38,8 @@ def convert_set_to_list(filename):
 
     return data
 
-def convert_parameter_table_to_dict(filename, Sdict=None):
 
+def convert_parameter_table_to_dict(filename, Sdict=None):
     """
     old function name : parse_gams_input_Smatrix
     generate a 2D dictionary based on Gams parameter table
@@ -49,11 +50,11 @@ def convert_parameter_table_to_dict(filename, Sdict=None):
 
     """
     f = open(filename, 'rU')
-    #remove quotes and don't read in lines with gams comment "*"
+    # remove quotes and don't read in lines with gams comment "*"
     if Sdict is None:
         Sdict = {}
     for line in f.readlines():
-        if (not line.startswith("*") and len(line.strip())> 0):
+        if (not line.startswith("*") and len(line.strip()) > 0):
             if line.startswith("/"):
                 continue
             entries = line.strip().split()
@@ -64,8 +65,8 @@ def convert_parameter_table_to_dict(filename, Sdict=None):
 
     return Sdict
 
-def convert_parameter_list_to_dict(filename, datadict=None):
 
+def convert_parameter_list_to_dict(filename, datadict=None):
     """
     old function name: parse_gams_input_rxntype
     generate a dictionary from gams parameter input
@@ -77,41 +78,43 @@ def convert_parameter_list_to_dict(filename, datadict=None):
     """
     f = open(filename, 'rU')
 
-
     if datadict is None:
         datadict = {}
 
-    #remove quotes and don't read in lines with gams comment "*"
+    # remove quotes and don't read in lines with gams comment "*"
     for line in f.readlines():
-        if (not line.startswith("*") and len(line.strip())> 0):
+        if (not line.startswith("*") and len(line.strip()) > 0):
             if line.startswith("/"):
                 continue
-            #remove single quotes
+            # remove single quotes
             entries = line.replace("'", "").split()
             datadict[entries[0]] = float(entries[1])
     return datadict
 
+
 def write_list_to_file(reaction_list, outputfilename, quotes=False):
-    f = open(outputfilename,'w')
+    f = open(outputfilename, 'w')
     if quotes:
         for rxn in reaction_list:
-            f.write("'%s'\n" %rxn)
+            f.write("'%s'\n" % rxn)
     else:
         for rxn in reaction_list:
-            f.write("%s\n" %rxn)
+            f.write("%s\n" % rxn)
     f.close()
     return 1
 
+
 def write_dict_to_file(paramdict, outputfilename, quotes=False):
-    f = open(outputfilename,'w')
+    f = open(outputfilename, 'w')
     if quotes:
-        for k,v in paramdict.iteritems():
-            f.write("'%s' %s\n"%(k, v))
+        for k, v in paramdict.items():
+            f.write("'%s' %s\n" % (k, v))
     else:
-        for k,v in paramdict.iteritems():
-            f.write("%s %s\n"%(k, v))
+        for k, v in paramdict.items():
+            f.write("%s %s\n" % (k, v))
     f.close()
     return 1
+
 
 def write_nested_dict_to_file(data, outputfilename, orient='second'):
     """
@@ -129,17 +132,17 @@ def write_nested_dict_to_file(data, outputfilename, orient='second'):
              1. first: write the first key
              2. second: write the second key first
     """
-    f = open(outputfilename,'w')
+    f = open(outputfilename, 'w')
 
     if orient == 'first':
-        for k1, g in data.iteritems():
-            for k2, v in g.iteritems():
-                f.write("'%s'.'%s'  %f\n" %(k1, k2, v))
+        for k1, g in data.items():
+            for k2, v in g.items():
+                f.write("'%s'.'%s'  %f\n" % (k1, k2, v))
 
     elif orient == 'second':
-        for k1, g in data.iteritems():
-            for k2, v in g.iteritems():
-                f.write("'%s'.'%s'  %f\n" %(k2, k1, v))
+        for k1, g in data.items():
+            for k2, v in g.items():
+                f.write("'%s'.'%s'  %f\n" % (k2, k1, v))
     else:
         raise ValueError("orient must be either 'first' or 'second'!")
 
@@ -148,12 +151,14 @@ def write_nested_dict_to_file(data, outputfilename, orient='second'):
     return 1
 
 
-#----------------------------------------------------------------
 if __name__ == '__main__':
 
     data_filepath = "data/"
 
-    ## rewrite reaction file
+    # rewrite reaction file
 
-    all_rxn = convert_set_to_list( os.path.join(data_filepath, 'reactions_modified.txt'))
+    all_rxn = convert_set_to_list(
+        os.path.join(
+            data_filepath,
+            'reactions_modified.txt'))
     #convert_set_to_list(all_rxn, 'reactions_modified_noquotes.txt')
