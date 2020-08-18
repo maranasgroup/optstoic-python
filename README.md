@@ -37,13 +37,14 @@ python setup.py install
 pip install nose
 cd project_folder/optstoic-python
 nosetests -s -v
+# nosetests -c=nose.cfg
 ```
 
 ## Solver requirement
 At least one of the following optimization solvers should be installed. To solve the loopless optStoic formulation, an optimization solver other than GLPK is recommended.
 
 1. GLPK 4.47 installation
-   - Linux: 
+   - Linux (Tested on Ubuntu 16.04): 
     ```bash
     wget  http://ftp.gnu.org/gnu/glpk/glpk-4.47.tar.gz
     tar -xvzf glpk-4.47.tar.gz
@@ -54,7 +55,7 @@ At least one of the following optimization solvers should be installed. To solve
     #if the program is successfully installed, you should get an output by typing
     glpsol --version
     ```
-    - Mac: 
+    - Mac (Tested on macOS Catalina): 
     ```
     brew install glpk
     # If success
@@ -63,17 +64,30 @@ At least one of the following optimization solvers should be installed. To solve
 
 2. GUROBI Optimization provide academic license for free (https://www.gurobi.com/). Install gurobipy following the instruction provided by GUROBI. 
 
-3. [SCIP Optimization Suite](https://scip.zib.de/) >= v4.0.0
-```
-sudo apt-get install libgmp-dev libreadline-dev zlib1g-dev libncurses5-dev
-tar xvf scipoptsuite-6.0.0.tgz
-cd scipoptsuite-6.0.0/
-make
-make test
-cd scip-6.0.0/
-sudo make install INSTALLDIR="/usr/local/"
-/usr/local/bin/scip --version
-```
+3. [SCIP Optimization Suite](https://scip.zib.de/) >= v4.0.0. See the [documentation of SCIP](https://www.scipopt.org/doc/html/CMAKE.php) for the installation procedure.
+    - Linux (Tested on Ubuntu 16.04):
+    ```
+    sudo apt-get install libgmp-dev libreadline-dev zlib1g-dev libncurses5-dev
+    tar xvf scipoptsuite-6.0.0.tgz
+    cd scipoptsuite-6.0.0/
+    make
+    make test
+    cd scip-6.0.0/
+    sudo make install INSTALLDIR="/usr/local/"
+    /usr/local/bin/scip --version
+    ```
+    - Mac (Tested on macOS Catalina):
+    ```
+    brew install gmp
+    brew install boost
+    tar xvf scipoptsuite-7.0.1.tgz
+    cd scipoptsuite-7.0.1/
+    make
+    make test
+    cd scip/
+    sudo make install INSTALLDIR="/usr/local/"
+    /usr/local/bin/scip --version
+    ```
 
 4. [CPLEX Optimizer](https://www.ibm.com/analytics/cplex-optimizer)
 
@@ -111,8 +125,8 @@ sudo make install INSTALLDIR="/usr/local/"
 ## Tests
 After cloning the repo or setup, please run tests as followed:
 ```
-pip install nose 
-nosetests -s -v 
+nosetests -s -v
+# nosetests -c=config.cfg
 ```
 
 To test the optimization algorithms, please run tests as followed. The runtime depends on the solvers selected by PuLP.
