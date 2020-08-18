@@ -1,4 +1,7 @@
 from __future__ import division
+from builtins import map
+from builtins import zip
+from builtins import object
 from .reaction import Reaction
 from .config import cofactors, default_params, rxnSji
 import os
@@ -9,15 +12,15 @@ from optstoicpy.script.utils import create_logger
 class Pathway(object):
     """OptStoic Pathway class"""
 
-    def __init__(self, 
-                 id=None, 
+    def __init__(self,
+                 id=None,
                  name=None,
-                 reaction_ids=[], 
-                 fluxes=[], 
+                 reaction_ids=[],
+                 fluxes=[],
                  reactions=None,
-                 sourceSubstrateID='C00031', 
+                 sourceSubstrateID='C00031',
                  endSubstrateID='C00022',
-                 total_flux_no_exchange=None, 
+                 total_flux_no_exchange=None,
                  note={},
                  logger=None):
         """
@@ -43,7 +46,7 @@ class Pathway(object):
             self.logger = logger
         self.id = id
         self.name = name
-        self.note = note        
+        self.note = note
 
         # Iniatilize pathway object using list of reaction_ids and fluxes
         if reactions is None:
@@ -51,10 +54,12 @@ class Pathway(object):
             # contain the same number of item
             assert (isinstance(reaction_ids, list) == 1)
             assert (isinstance(fluxes, list) == 1)
-            assert len(reaction_ids) == len(fluxes), "number of reactions must equal number of fluxes!"
+            assert len(reaction_ids) == len(
+                fluxes), "number of reactions must equal number of fluxes!"
 
             # Change EX_h+ to EX_hplus as optstoic pulp fail to read "+" symbol
-            self.reaction_ids = ["EX_hplus" if x == "EX_h+" else x for x in reaction_ids]
+            self.reaction_ids = ["EX_hplus" if x ==
+                                 "EX_h+" else x for x in reaction_ids]
 
             self.fluxes = fluxes
             # Create list of reaction objects
@@ -68,7 +73,8 @@ class Pathway(object):
             self.fluxes = [r.flux for r in reactions]
             self.reaction_ids = [r.rid for r in reactions]
 
-        self.reaction_ids_no_exchange = [r for r in reaction_ids if 'EX_' not in r]
+        self.reaction_ids_no_exchange = [
+            r for r in reaction_ids if 'EX_' not in r]
 
         if not total_flux_no_exchange:
             self.total_flux_no_exchange = sum(map(
@@ -76,12 +82,11 @@ class Pathway(object):
         else:
             self.total_flux_no_exchange = total_flux_no_exchange
 
-
-        self.rxn_flux_dict = dict(zip(self.reaction_ids, self.fluxes))
+        self.rxn_flux_dict = dict(list(zip(self.reaction_ids, self.fluxes)))
 
         try:
             self.nATP = self.rxn_flux_dict['EX_atp']
-        except:
+        except BaseException:
             self.nATP = None
         self.sourceSubstrateID = sourceSubstrateID
         self.endSubstrateID = endSubstrateID
@@ -90,13 +95,13 @@ class Pathway(object):
         """
         return a dictionary of the {reaction:flux}
         """
-        return dict(zip(self.reaction_ids, self.fluxes))
+        return dict(list(zip(self.reaction_ids, self.fluxes)))
 
     def update_nATP(self):
 
         try:
             self.nATP = self.rxn_flux_dict['EX_atp']
-        except:
+        except BaseException:
             self.nATP = None
 
     def get_total_flux(self):
@@ -205,7 +210,6 @@ class Pathway(object):
         idscore = len(a & b) / len(a | b)
         return idscore
 
-
     def is_same_pathway_with(self, another_pathway):
         idscore = self.get_pathway_similarity_index(another_pathway)
         if idscore == 1:
@@ -215,11 +219,11 @@ class Pathway(object):
 
     def to_dict(self):
         return dict(pathway=self.get_pathway_dict(),
-            num_reaction=len(self.reaction_ids),
-            total_flux_no_exchange=self.get_total_flux_no_exchange(),
-            modelstat=self.get_modelstat(),
-            solvestat=self.get_solvestat(),
-            time=self.get_time())
+                    num_reaction=len(self.reaction_ids),
+                    total_flux_no_exchange=self.get_total_flux_no_exchange(),
+                    modelstat=self.get_modelstat(),
+                    solvestat=self.get_solvestat(),
+                    time=self.get_time())
 
     @staticmethod
     def pathways_to_dict(list_of_pathways):
@@ -239,24 +243,24 @@ class Pathway(object):
 # ----------------------------------------------------------------------------
 
 
-def generate_kegg_model(pathway, 
+def generate_kegg_model(pathway,
                         params=default_params,
-                        filehandle=None, 
+                        filehandle=None,
                         add_ratio_constraints=False):
     """
     Convert the pathway to KEGG model format
     (as input for Component Contribution/MDF)
-    
+
     Args:
         pathway (TYPE): A pathway instance
         params (TYPE, optional): KEGG model parameters (default parameters are given)
         filehandle (None, optional): If a text file handle is provided,
             it writes the model text to the file (default None)
         add_ratio_constraints (bool, optional): Description
-    
+
     Returns:
         TYPE: Description
-    
+
     """
     params['ENTRY'] = "{0}_{1}ATP_P{2}".format(pathway.name,
                                                pathway.nATP, pathway.id)
@@ -278,14 +282,16 @@ C_RANGE\t\t{C_RANGE[0]:.0e} {C_RANGE[1]:.0e}\n""".format(**params)
         all_bounds = params['RATIO_BOUND']
 
         # write the ratios
-        for i, (cids, ratios) in enumerate(sorted(params['RATIO'].iteritems())):
+        for i, (cids, ratios) in enumerate(sorted(params['RATIO'].items())):
             if i == 0:
-                modeltext += "RATIO\t\t{C[0]} {C[1]} {B[0]:e} {B[1]:e}\n".format(C=cids, B=ratios)
+                modeltext += "RATIO\t\t{C[0]} {C[1]} {B[0]:e} {B[1]:e}\n".format(
+                    C=cids, B=ratios)
             else:
-                modeltext += "\t\t\t{C[0]} {C[1]} {B[0]:e} {B[1]:e}\n".format(C=cids, B=ratios)
+                modeltext += "\t\t\t{C[0]} {C[1]} {B[0]:e} {B[1]:e}\n".format(
+                    C=cids, B=ratios)
 
     # write the bounds
-    for i, (cid, bounds) in enumerate(sorted(all_bounds.iteritems())):
+    for i, (cid, bounds) in enumerate(sorted(all_bounds.items())):
         if i == 0:
             modeltext += "BOUND\t\t{0} {1[0]:e} {1[1]:e}\n".format(cid, bounds)
         else:

@@ -1,4 +1,4 @@
-#/usr/bin/python
+# /usr/bin/python
 """
 Loopless OptStoic program to identify glycolytic pathway
 (glucose to pyruvate) for n ATP production.
@@ -9,6 +9,7 @@ Tip:
 Change the number of Thread for gurobi if needed.
 
 """
+from __future__ import absolute_import
 import os
 import time
 import sys
@@ -17,14 +18,15 @@ import random
 import string  # to generate random hex code
 import pulp
 # import cPickle as pickle
-import gams_parser
+from . import gams_parser
 import json
 #import pdb
 from optstoicpy.core import database
 from optstoicpy.script.utils import create_logger
 from optstoicpy.script.solver import load_pulp_solver
 from optstoicpy.script.optstoic import OptStoic
-from gurobi_command_line_solver import *
+from .gurobi_command_line_solver import *
+
 
 class OptStoicGlycolysis(OptStoic):
 
@@ -40,7 +42,7 @@ class OptStoicGlycolysis(OptStoic):
         'EX_hplus': {'C00080': -1.0},
         'EX_nadp': {'C00006': -1.0},
         'EX_nadph': {'C00005': -1.0}
-        }
+    }
 
     CUSTOM_REDOX_CONSTRAINTS = [
         {'constraint_name': 'nadphcons1',
@@ -48,29 +50,29 @@ class OptStoicGlycolysis(OptStoic):
          'UB': 2,
          'LB': 2},
         {'constraint_name': 'nadphcons2',
-        'reactions': ['EX_nadp', 'EX_nad'],
-        'UB': -2,
-        'LB': -2},
+         'reactions': ['EX_nadp', 'EX_nad'],
+         'UB': -2,
+         'LB': -2},
         {'constraint_name': 'nadphcons3',
-        'reactions': ['EX_nadh', 'EX_nad'],
-        'UB': 0,
-        'LB': 0},
+         'reactions': ['EX_nadh', 'EX_nad'],
+         'UB': 0,
+         'LB': 0},
         {'constraint_name': 'nadphcons4',
-        'reactions': ['EX_nadph', 'EX_nadp'],
-        'UB': 0,
-        'LB': 0}]
+         'reactions': ['EX_nadph', 'EX_nadp'],
+         'UB': 0,
+         'LB': 0}]
 
     GLYCOLYSIS_BOUNDS = {'EX_glc': {'LB': -1, 'UB': -1},
-                    'EX_pyruvate': {'LB': 2, 'UB': 2},
-                    'EX_nad': {'LB': -2, 'UB': 0},
-                    'EX_nadh': {'LB': 0, 'UB': 2},
-                    'EX_nadp': {'LB': -2, 'UB': 0},
-                    'EX_nadph': {'LB': 0, 'UB': 2},
-                    #'EX_adp': {'LB': -1, 'UB': -1},
-                    #'EX_phosphate': {'LB': -1, 'UB': -1},
-                    #'EX_atp': {'LB': 1, 'UB': 1},
-                    #'EX_h2o': {'LB': 1, 'UB': 1},
-                    'EX_hplus': {'LB': -10, 'UB': 10}}
+                         'EX_pyruvate': {'LB': 2, 'UB': 2},
+                         'EX_nad': {'LB': -2, 'UB': 0},
+                         'EX_nadh': {'LB': 0, 'UB': 2},
+                         'EX_nadp': {'LB': -2, 'UB': 0},
+                         'EX_nadph': {'LB': 0, 'UB': 2},
+                         # 'EX_adp': {'LB': -1, 'UB': -1},
+                         # 'EX_phosphate': {'LB': -1, 'UB': -1},
+                         # 'EX_atp': {'LB': 1, 'UB': 1},
+                         # 'EX_h2o': {'LB': 1, 'UB': 1},
+                         'EX_hplus': {'LB': -10, 'UB': 10}}
 
     def __init__(self,
                  objective='MinFlux',
@@ -81,10 +83,10 @@ class OptStoicGlycolysis(OptStoic):
                  pulp_solver=None,
                  result_filepath=None,
                  M=1000,
-                 logger=None):        
+                 logger=None):
         """An example of the optStoic model for identifying glycolytic pathways
             generating n ATP.
-        
+
         Args:
             objective (str, optional): Description
             zlb (int, optional): Description
@@ -100,21 +102,20 @@ class OptStoicGlycolysis(OptStoic):
         self.DBV3 = database.load_db_v3(
             reduce_model_size=True,
             user_defined_export_rxns_Sji=self.EXPORT_RXNS_SJI
-            )
+        )
 
         super(OptStoicGlycolysis, self).__init__(
-                         database=self.DBV3,
-                         objective='MinFlux',
-                         zlb=zlb,
-                         specific_bounds=self.GLYCOLYSIS_BOUNDS,
-                         custom_flux_constraints=self.CUSTOM_REDOX_CONSTRAINTS,
-                         add_loopless_constraints=add_loopless_constraints,
-                         max_iteration=max_iteration,
-                         pulp_solver=pulp_solver,
-                         result_filepath=result_filepath,
-                         M=1000,
-                         logger=logger)
-
+            database=self.DBV3,
+            objective='MinFlux',
+            zlb=zlb,
+            specific_bounds=self.GLYCOLYSIS_BOUNDS,
+            custom_flux_constraints=self.CUSTOM_REDOX_CONSTRAINTS,
+            add_loopless_constraints=add_loopless_constraints,
+            max_iteration=max_iteration,
+            pulp_solver=pulp_solver,
+            result_filepath=result_filepath,
+            M=1000,
+            logger=logger)
 
         self.nATP = nATP
 
@@ -130,15 +131,17 @@ class OptStoicGlycolysis(OptStoic):
         self.specific_bounds['EX_h2o'] = {'LB': value, 'UB': value}
         self.specific_bounds['EX_adp'] = {'LB': -value, 'UB': -value}
         self.specific_bounds['EX_phosphate'] = {'LB': -value, 'UB': -value}
-        
-        # When nATP is not integer, change variables v, vf and vb to continuous variables
+
+        # When nATP is not integer, change variables v, vf and vb to continuous
+        # variables
         if float(value).is_integer():
             self._varCat = 'Integer'
         else:
             self._varCat = 'Continuous'
 
     def __repr__(self):
-        return "<OptStoicGlycolysis(nATP='%s', objective='%s')>" % (self.nATP, self.objective)
+        return "<OptStoicGlycolysis(nATP='%s', objective='%s')>" % (
+            self.nATP, self.objective)
 
 
 def test_optstoic_glycolysis():
@@ -147,21 +150,27 @@ def test_optstoic_glycolysis():
     logger.info("Test optstoic_glycolysis")
 
     pulp_solver = load_pulp_solver(
-        solver_names=['SCIP_CMD', 'GUROBI', 'GUROBI_CMD', 'CPLEX_CMD', 'GLPK_CMD'],
+        solver_names=[
+            'SCIP_CMD',
+            'GUROBI',
+            'GUROBI_CMD',
+            'CPLEX_CMD',
+            'GLPK_CMD'],
         logger=logger)
 
     test = OptStoicGlycolysis(
-                    objective='MinFlux',
-                    nATP=1,
-                    zlb=10, # setting this may slow down the optimization, but integer cut constraints will work
-                    max_iteration=1,
-                    pulp_solver=pulp_solver,
-                    result_filepath='./result/',
-                    M=1000,
-                    logger=logger)
+        objective='MinFlux',
+        nATP=1,
+        zlb=10,  # setting this may slow down the optimization, but integer cut constraints will work
+        max_iteration=1,
+        pulp_solver=pulp_solver,
+        result_filepath='./result/',
+        M=1000,
+        logger=logger)
 
     if sys.platform == 'cygwin':
-        lp_prob, pathways = test.solve_gurobi_cl(outputfile='test_optstoic_cyg.txt', cleanup=False)
+        lp_prob, pathways = test.solve_gurobi_cl(
+            outputfile='test_optstoic_cyg.txt', cleanup=False)
         #test.max_iteration = test.max_iteration + 2
         #lp_prob, pathways = test.solve_gurobi_cl(outputfile='test_optstoic_cyg.txt', exclude_existing_solution=True, cleanup=False)
     else:
@@ -171,7 +180,6 @@ def test_optstoic_glycolysis():
 
     return lp_prob, pathways
 
+
 if __name__ == '__main__':
     lp_prob, pathways = test_optstoic_glycolysis()
-
-

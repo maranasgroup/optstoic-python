@@ -1,3 +1,0 @@
-limits/gap = 1e-6
-limits/absgap = 1e-6
-lp/threads = 6

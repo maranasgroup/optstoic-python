@@ -1,6 +1,14 @@
+.eggs/
+.git
+build/
+dist/
+*.bak
 *.pyc
 */*.pyc
 */**/*.pyc
 *.lp
 */*.lp
 optstoicpy.egg-info/
+.DS_Store
+
+

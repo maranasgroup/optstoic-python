@@ -1,5 +1,8 @@
+from builtins import range
+from builtins import object
 from .config import rxnSji
 from optstoicpy.script.utils import create_logger
+
 
 class Reaction(object):
     """Reaction class
@@ -12,11 +15,11 @@ class Reaction(object):
         rid (TYPE): Description
     """
 
-    def __init__(self, 
-                 rid=None, 
-                 flux=1, 
+    def __init__(self,
+                 rid=None,
+                 flux=1,
                  metabolites={},
-                 equation='', 
+                 equation='',
                  reversible=True,
                  logger=None):
 
@@ -42,21 +45,21 @@ class Reaction(object):
     @property
     def reactants(self):
         if self.flux > 0:
-            return [k for k, v in self.metabolites.items() if v < 0]
+            return [k for k, v in list(self.metabolites.items()) if v < 0]
         else:
-            return [k for k, v in self.metabolites.items() if v > 0]
+            return [k for k, v in list(self.metabolites.items()) if v > 0]
 
     @property
     def products(self):
         if self.flux > 0:
-            return [k for k, v in self.metabolites.items() if v > 0]
+            return [k for k, v in list(self.metabolites.items()) if v > 0]
         else:
-            return [k for k, v in self.metabolites.items() if v < 0]
+            return [k for k, v in list(self.metabolites.items()) if v < 0]
 
     def set_equation(self):
         """Write equation in the direction of the flux.
         The main purpose is to simplify downstream MDF/protein cost analysis.
-        
+
         Returns:
             TYPE: Description
         """
@@ -64,7 +67,8 @@ class Reaction(object):
             self.logger.warning("Equation exists!")
         else:
             if len(self.metabolites) == 0:
-                self.logger.info("Metabolites are not available! Auto-updating metabolites...")
+                self.logger.info(
+                    "Metabolites are not available! Auto-updating metabolites...")
                 self.autoset_metabolites()
 
             temp_list = []
