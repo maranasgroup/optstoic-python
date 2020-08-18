@@ -43,7 +43,7 @@ setup(
                                      'data',
                                      'docs',
                                      'examples']),
-    install_requires=install_requires,
+    install_requires=install_requires+test_requires,
     test_suite='nose.collector',
     tests_require=test_requires,
     extras_require={
