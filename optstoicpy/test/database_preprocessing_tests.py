@@ -10,6 +10,10 @@ from optstoicpy.script.solver import (
 
 class TestDatabasePreprocessing(unittest.TestCase):
     def test_blocked_reactions_analysis(self):
+        """Test blocked reactions analysis. 
+        A Pulp solver must be loaded for this test to complete.
+        Otherwise this test will be skipped.
+        """
         user_defined_export_rxns_Sji = {
             'EX_glc': {'C00031': -1.0},
             'EX_nad': {'C00003': -1.0},

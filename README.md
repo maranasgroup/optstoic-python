@@ -123,10 +123,10 @@ At least one of the following optimization solvers should be installed. To solve
 3. [Component-Contribution](https://github.com/eladnoor/component-contribution) (*Optional, unless you want to perform MDF analysis)
 
 ## Tests
-After cloning the repo or setup, please run tests as followed:
+After cloning the repo or setup, please run tests as followed. Note that the [don't capture stdout](https://nose.readthedocs.io/en/latest/usage.html#cmdoption-s) option must be provided to the nosetests (`nosetests --nocapture` or `nosetests -s`) so that Pulp can read/write from intermediate files.
 ```
 nosetests -s -v
-# nosetests -c=config.cfg
+# nosetests --config=nose.cfg
 ```
 
 To test the optimization algorithms, please run tests as followed. The runtime depends on the solvers selected by PuLP.

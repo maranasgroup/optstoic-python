@@ -26,7 +26,7 @@ class TestPathway(unittest.TestCase):
                      reaction_ids=self.pathway_fixture['reaction_id'],
                      fluxes=self.pathway_fixture['flux'])
 
-    @unittest.skip("Skip test!")
+    @unittest.skip("Need to update test!")
     def test_rearrange_pathway(self):
         self.logger.info("Test rearranging reaction order")
         self.p1.rearrange_reaction_order()

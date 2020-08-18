@@ -197,7 +197,7 @@ class BaseReactionDatabase(object):
         else:
             self.logger.debug('Reaction %s has been updated from %s to %s.'
                          % (rid, self.REACTION_TYPE.get(t0), self.REACTION_TYPE.get(rxntype))
-                         )
+                        )
 
     def extend_S_from_gams_inputfile(self, filename=None):
         """Extend S matrix using the gams S matrix format.        
