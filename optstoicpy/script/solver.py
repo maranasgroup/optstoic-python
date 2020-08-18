@@ -2,8 +2,9 @@ import os
 import pulp
 from optstoicpy.script.utils import create_logger
 
-ORDERED_SOLVERS = ['SCIP_CMD', 'GUROBI', 'GUROBI_CMD', 'CPLEX_CMD', 'GLPK_CMD']
+ORDERED_SOLVERS = ['GUROBI', 'GUROBI_CMD', 'CPLEX_CMD', 'SCIP_CMD', 'GLPK_CMD']
 
+# TODO: Solver parameters need to be updated
 SCIP_CMD_PARAMETERS = [
     "limits/gap = 1e-6",
     "limits/absgap = 1e-6",

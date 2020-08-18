@@ -16,6 +16,8 @@ class TestOptStoic(unittest.TestCase):
         self.logger = create_logger(name='Test generalized optstoic')
         self.pulp_solver = load_pulp_solver(
             solver_names=ORDERED_SOLVERS)
+        if self.pulp_solver.name not in ['GUROBI', 'GUROBI_CMD', 'CPLEX_CMD']:
+            self.skipTest("Skip because it will take a long time to solve.")
 
     def load_database(self):
         self.logger.info("Test loading Database")
@@ -42,14 +44,13 @@ class TestOptStoic(unittest.TestCase):
         # assert_equal(len(DB.reactions), 7175)
         return DB
 
-    @unittest.skip("Skip optstoic setup")
     def test_optstoic_glycolysis(self):
         """Test optstoic for glycolysis pathway."""
-
         model = optsg.OptStoicGlycolysis(
             objective='MinFlux',
             nATP=1,
             zlb=10,
+            add_loopless_constraints=False, # Setting this to False, would speed up.
             max_iteration=1,
             pulp_solver=self.pulp_solver,
             result_filepath=None,
@@ -58,19 +59,18 @@ class TestOptStoic(unittest.TestCase):
         lp_prob, pathways = model.solve(
             outputfile='test_optstoic.txt')
 
-        if sys.platform == 'cygwin':
-            lp_prob, pathways = model.solve_gurobi_cl(
-                outputfile='test_optstoic_cyg.txt', cleanup=False)
-            #test.max_iteration = test.max_iteration + 2
-            #lp_prob, pathways = test.solve_gurobi_cl(outputfile='test_optstoic_cyg.txt', exclude_existing_solution=True, cleanup=False)
-        else:
-            lp_prob, pathways = model.solve(outputfile='test_optstoic.txt')
-            #test.max_iteration = test.max_iteration + 1
-            #lp_prob, pathways = test.solve(outputfile='test_optstoic.txt', exclude_existing_solution=True)
+        # if sys.platform == 'cygwin':
+        #     lp_prob, pathways = model.solve_gurobi_cl(
+        #         outputfile='test_optstoic_cyg.txt', cleanup=False)
+        #     test.max_iteration = test.max_iteration + 2
+        #     lp_prob, pathways = test.solve_gurobi_cl(outputfile='test_optstoic_cyg.txt', exclude_existing_solution=True, cleanup=False)
+        #else:
+        lp_prob, pathways = model.solve(outputfile='test_optstoic.txt')
+        #test.max_iteration = test.max_iteration + 1
+        #lp_prob, pathways = test.solve(outputfile='test_optstoic.txt', exclude_existing_solution=True)
 
         self.assertEqual(pathways[1]['modelstat'], 'Optimal')
 
-    @unittest.skip("Skip optstoic setup")
     def test_general_optstoic(self):
         """Test optstoic analysis with standard setup
 
@@ -154,13 +154,13 @@ class TestOptStoic(unittest.TestCase):
             M=1000,
             logger=self.logger)
 
-        if sys.platform == 'cygwin':
-            lp_prob, pathways = model.solve_gurobi_cl(
-                outputfile='test_optstoic_general_cyg.txt', cleanup=False)
-            #test.max_iteration = test.max_iteration + 2
-            #lp_prob, pathways = test.solve_gurobi_cl(outputfile='test_optstoic_general_cyg.txt', exclude_existing_solution=True, cleanup=False)
-        else:
-            lp_prob, pathways = model.solve(
-                outputfile='test_optstoic_general.txt')
+        # if sys.platform == 'cygwin':
+        #     lp_prob, pathways = model.solve_gurobi_cl(
+        #         outputfile='test_optstoic_general_cyg.txt', cleanup=False)
+        #     test.max_iteration = test.max_iteration + 2
+        #     lp_prob, pathways = test.solve_gurobi_cl(outputfile='test_optstoic_general_cyg.txt', exclude_existing_solution=True, cleanup=False)
+        # else:
+        lp_prob, pathways = model.solve(
+            outputfile='test_optstoic_general.txt')
 
         self.assertEqual(pathways[1]['modelstat'], 'Optimal')
