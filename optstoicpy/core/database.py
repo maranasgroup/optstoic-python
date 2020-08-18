@@ -14,6 +14,7 @@ DATA_DIR = os.path.normpath(
     os.path.join(CURRENT_DIR, '../data/', 'optstoic_db_v3')
 )
 
+
 class BaseReactionDatabase(object):
     """The initial reaction database to be used for pre-processing.
 
@@ -24,11 +25,11 @@ class BaseReactionDatabase(object):
                      2: 'Reverse irreverisble', 4: 'Export reaction'}
 
     def __init__(
-        self,
-        data_filepath='../data/',
-        dbdict_json=None,
-        dbdict_gams=None,
-        logger=None):
+            self,
+            data_filepath='../data/',
+            dbdict_json=None,
+            dbdict_gams=None,
+            logger=None):
 
         if logger is None:
             self.logger = create_logger('core.BaseDatabase')
@@ -39,7 +40,7 @@ class BaseReactionDatabase(object):
         self.dbdict_json = dbdict_json
         self.dbdict_gams = dbdict_gams
 
-        #initalize
+        # initalize
         self.reactions = []
         self.metabolites = []
         self.S = {}
@@ -48,28 +49,35 @@ class BaseReactionDatabase(object):
         self.user_defined_export_rxns = []
         self._S_df = None
 
-
     def load(self):
         # Method 1: JSON approach
         if self.dbdict_json is not None:
             self.logger.debug('Reading S matrix from JSON...')
-            self.Sji = json.load(open(os.path.join(self.data_filepath,
-                                                   self.dbdict_json['Sji']), 'r+'))
+            self.Sji = json.load(
+                open(
+                    os.path.join(
+                        self.data_filepath,
+                        self.dbdict_json['Sji']),
+                    'r+'))
             self.S = self.transpose_S(self.Sji)
             self.reactions = sorted(self.Sji.keys())
             self.internal_rxns = copy.deepcopy(self.reactions)
             self.metabolites = sorted(self.S.keys())
             self.logger.debug('Reading reaction type file...')
-            self.rxntype = json.load(open(os.path.join(self.data_filepath,
-                                                   self.dbdict_json['reactiontype']), 'r+'))
+            self.rxntype = json.load(
+                open(
+                    os.path.join(
+                        self.data_filepath,
+                        self.dbdict_json['reactiontype']),
+                    'r+'))
 
-        # Method 2: Standard GAMS input file 
+        # Method 2: Standard GAMS input file
         else:
             self.logger.debug('Reading S matrix from txt...')
             self.S = gams_parser.convert_parameter_table_to_dict(
                 os.path.join(self.data_filepath,
                              self.dbdict_gams['Sji'])
-                )
+            )
             self.Sji = self.transpose_S(self.S)
 
             # Load reactions
@@ -94,7 +102,7 @@ class BaseReactionDatabase(object):
 
     def validate(self):
         """Validate the S matrix, the reaction vector and the reaction type vector.
-        
+
         Raises:
             Exception: Description
         """
@@ -107,10 +115,11 @@ class BaseReactionDatabase(object):
             raise Exception("The number of metabolites do not match!")
 
         for rxn in self.reactions:
-            assert self.rxntype.get(rxn, None) != None, "%s does not have rxntype assigned!"%rxn
+            assert self.rxntype.get(
+                rxn, None) is not None, "%s does not have rxntype assigned!" % rxn
 
         if None in set(self.rxntype.values()):
-            raise Exception("Some reaction type is not assigned!")    
+            raise Exception("Some reaction type is not assigned!")
 
     @staticmethod
     def transpose_S(Sji):
@@ -132,7 +141,7 @@ class BaseReactionDatabase(object):
         performed on S(ij) or Sji, refresh the database to reflect
         the changes on all related attribute.
         TODO: This can be simplified
-        
+
         Args:
             previous_operations_on (str, optional): Description
         """
@@ -143,7 +152,8 @@ class BaseReactionDatabase(object):
             # re-create Sji from S
             self.Sji = self.transpose_S(self.S)
         else:
-            raise Exception("The previous_operations_on argument must be from the list: ['S', 'Sji']")
+            raise Exception(
+                "The previous_operations_on argument must be from the list: ['S', 'Sji']")
 
         # update S df
         self.create_or_update_S_df()
@@ -178,14 +188,17 @@ class BaseReactionDatabase(object):
     def get_reaction_type(self, rid, verbose=True):
         try:
             self.rxntype[rid]
-        except:
+        except BaseException:
             self.logger.warning("Reaction %s not in database!" % rid)
             return None
         else:
             if verbose:
-                print("Reaction: {0} is ({1}) {2}".format(
-                    rid, self.rxntype[rid], self.REACTION_TYPE.get(self.rxntype[rid])
-                ))
+                print(
+                    "Reaction: {0} is ({1}) {2}".format(
+                        rid,
+                        self.rxntype[rid],
+                        self.REACTION_TYPE.get(
+                            self.rxntype[rid])))
             return self.rxntype[rid]
 
     def set_reaction_type(self, rid, rxntype):
@@ -195,12 +208,12 @@ class BaseReactionDatabase(object):
         except KeyError:
             self.logger.error('Reaction %s not in database!' % rid)
         else:
-            self.logger.debug('Reaction %s has been updated from %s to %s.'
-                         % (rid, self.REACTION_TYPE.get(t0), self.REACTION_TYPE.get(rxntype))
-                        )
+            self.logger.debug(
+                'Reaction %s has been updated from %s to %s.' %
+                (rid, self.REACTION_TYPE.get(t0), self.REACTION_TYPE.get(rxntype)))
 
     def extend_S_from_gams_inputfile(self, filename=None):
-        """Extend S matrix using the gams S matrix format.        
+        """Extend S matrix using the gams S matrix format.
         Args:
             filename (None, optional): The name of the inputfile.
         """
@@ -211,12 +224,12 @@ class BaseReactionDatabase(object):
         self.refresh_database(previous_operations_on='S')
 
     def update_S(self, extension_dict, default_reactiontype=None):
-        """Add new reactions using dictionary           
+        """Add new reactions using dictionary
         {'EX_glc': {'C00031': -1.0},
-         'EX_nad': {'C00003': -1.0}}     
+         'EX_nad': {'C00003': -1.0}}
         Args:
             extension_dict (TYPE): Description
-        
+
         Returns:
             TYPE: Description
         """
@@ -236,8 +249,9 @@ class BaseReactionDatabase(object):
         return self.S, temp_rxn
 
     def set_database_export_reaction(self, export_reactions_Sij_dict):
-       
-        _, temp_rxn = self.update_S(export_reactions_Sij_dict, default_reactiontype=4)
+
+        _, temp_rxn = self.update_S(
+            export_reactions_Sij_dict, default_reactiontype=4)
         if len(self.user_defined_export_rxns) != 0:
             self.logger.warning("Warning: The current list of export reactions\
                 will be replaced! %s" % str(self.user_defined_export_rxns))
@@ -252,7 +266,7 @@ class BaseReactionDatabase(object):
 
     def remove_reaction(self, reaction_id, refresh_database=True):
         """Remove a reaction by reaction_id from the database.
-        
+
         Args:
             reaction_id (TYPE): The reaction_id
             refresh_database (bool, optional):  If True, the S matrix will be updated,
@@ -273,29 +287,31 @@ class BaseReactionDatabase(object):
         if refresh_database:
             self.refresh_database(previous_operations_on='Sji')
 
-        self.logger.debug("Reaction %s removed from the database."%reaction_id)
+        self.logger.debug(
+            "Reaction %s removed from the database." %
+            reaction_id)
 
     def __repr__(self):
         return "BaseReactionDatabase"
 
 
-
 class Database(BaseReactionDatabase):
-    """The optstoic Database class: loading database from GAMS input files. 
+    """The optstoic Database class: loading database from GAMS input files.
     TODO: Use cobrapy Model/interconvert between different modes of input.
     """
+
     def __init__(
-        self,
-        description='',
-        data_filepath='../data/',
-        dbdict_json=None,
-        dbdict_gams=None,
-        blocked_rxns=None,
-        excluded_reactions=None,
-        reduce_model_size=True,
-        logger=None):
+            self,
+            description='',
+            data_filepath='../data/',
+            dbdict_json=None,
+            dbdict_gams=None,
+            blocked_rxns=None,
+            excluded_reactions=None,
+            reduce_model_size=True,
+            logger=None):
         """Summary
-        
+
         Args:
             description (str, optional): Description of the Database
             data_filepath (str, optional): Description
@@ -305,7 +321,7 @@ class Database(BaseReactionDatabase):
             excluded_reactions (None, optional): A list of reactions to be excluded
                 from optstoic result
             reduce_model_size (bool, optional): If True, remove blocked_rxns from
-                the S matrix to speed up optstoic analysis 
+                the S matrix to speed up optstoic analysis
             logger (None, optional): Description
         """
         if logger is None:
@@ -323,10 +339,11 @@ class Database(BaseReactionDatabase):
         self.loops = []
         self.Ninternal = {}
         self.all_excluded_reactions = []
-        self.excluded_reactions = excluded_reactions     
+        self.excluded_reactions = excluded_reactions
 
         if blocked_rxns is not None:
-            assert isinstance(blocked_rxns, list), "blocked_rxns must be a list"   
+            assert isinstance(
+                blocked_rxns, list), "blocked_rxns must be a list"
         self.blocked_rxns = blocked_rxns
         self.reduce_model_size = reduce_model_size
 
@@ -335,28 +352,40 @@ class Database(BaseReactionDatabase):
         # Method 1: JSON approach
         if self.dbdict_json is not None:
             self.logger.debug('Reading S matrix from JSON...')
-            self.Sji = json.load(open(os.path.join(self.data_filepath,
-                                                   self.dbdict_json['Sji']), 'r+'))
+            self.Sji = json.load(
+                open(
+                    os.path.join(
+                        self.data_filepath,
+                        self.dbdict_json['Sji']),
+                    'r+'))
             self.S = self.transpose_S(self.Sji)
             self.reactions = sorted(self.Sji.keys())
             self.internal_rxns = copy.deepcopy(self.reactions)
             self.metabolites = sorted(self.S.keys())
             self.logger.debug('Reading reaction type file...')
-            self.rxntype = json.load(open(os.path.join(self.data_filepath,
-                                                   self.dbdict_json['reactiontype']), 'r+'))
+            self.rxntype = json.load(
+                open(
+                    os.path.join(
+                        self.data_filepath,
+                        self.dbdict_json['reactiontype']),
+                    'r+'))
 
             self.logger.debug('Reading Nint(loop, j) from JSON...')
-            self.Ninternal = json.load(open(os.path.join(self.data_filepath,
-                                                   self.dbdict_json['Nint']), 'r+'))
+            self.Ninternal = json.load(
+                open(
+                    os.path.join(
+                        self.data_filepath,
+                        self.dbdict_json['Nint']),
+                    'r+'))
 
             self.loops = sorted(self.Ninternal.keys())
-        # Method 2: Standard GAMS input file 
+        # Method 2: Standard GAMS input file
         else:
             self.logger.debug('Reading S matrix from txt...')
             self.S = gams_parser.convert_parameter_table_to_dict(
                 os.path.join(self.data_filepath,
                              self.dbdict_gams['Sji'])
-                )
+            )
             self.Sji = self.transpose_S(self.S)
 
             self.logger.debug('Reading metabolite file...')
@@ -383,7 +412,7 @@ class Database(BaseReactionDatabase):
             self.loops = gams_parser.convert_set_to_list(
                 os.path.join(self.data_filepath, self.dbdict_gams['loops']))
 
-        if self.excluded_reactions is not None:     
+        if self.excluded_reactions is not None:
             self.all_excluded_reactions = list(
                 set(self.excluded_reactions + self.blocked_rxns)
             )
@@ -396,12 +425,13 @@ class Database(BaseReactionDatabase):
             self.remove_blocked_reactions()
             self.validate()
 
-    def remove_blocked_reactions(self):   
+    def remove_blocked_reactions(self):
         self.logger.warning("Removing blocked reactions to reduce model size!")
 
         loop_rxns = [list(v.keys()) for v in list(self.Ninternal.values())]
         loop_rxns = set([rid for sublist in loop_rxns for rid in sublist])
-        assert len(loop_rxns & set(self.blocked_rxns)) == 0, "Blocked reactions must not present in loops"
+        assert len(loop_rxns & set(self.blocked_rxns)
+                   ) == 0, "Blocked reactions must not present in loops"
 
         for rxn in self.blocked_rxns:
             self.remove_reaction(rxn, refresh_database=False)
@@ -413,9 +443,9 @@ class Database(BaseReactionDatabase):
 
 
 def load_custom_reactions_to_be_excluded():
-    """A list of undesirable reactions that are specific 
+    """A list of undesirable reactions that are specific
     to the glycolysis study
-    
+
     Returns:
         TYPE: Description
     """
@@ -464,37 +494,40 @@ def load_custom_reactions_to_be_excluded():
         'R00306'
     ]
 
-    excluded_reactions = (NTP_involving_rxns + 
+    excluded_reactions = (NTP_involving_rxns +
                           methylglyoxal_rxns +
-                          cofactor_only_rxns + 
+                          cofactor_only_rxns +
                           other_undesirable_rxns)
 
     all_excluded_reactions = list(set(excluded_reactions))
     return all_excluded_reactions
 
+
 def load_base_reaction_db(
-    user_defined_export_rxns_Sji=None,
-    logger=None):
+        user_defined_export_rxns_Sji=None,
+        logger=None):
     """Load the base reaction database with all reactions
     (i.e., no blocked reactions and no loops)
-    
+
     Args:
         user_defined_export_rxns_Sji (None, optional): Description
-    
+
     Returns:
-        :obj:`BaseReactionDatabase`: 
+        :obj:`BaseReactionDatabase`:
     """
     if logger is None:
-        logger = create_logger(name="optstoicpy.core.database.load_base_reaction_db")
+        logger = create_logger(
+            name="optstoicpy.core.database.load_base_reaction_db")
 
-    # get reactions that are manually curated to be excluded for glycolysis study
+    # get reactions that are manually curated to be excluded for glycolysis
+    # study
     excluded_reactions = load_custom_reactions_to_be_excluded()
 
-    dbdict_json = {        
+    dbdict_json = {
         'Sji': 'optstoic_v3_Sji_dict.json',
         'reactiontype': 'optstoic_v3_reactiontype.json'
     }
-    dbdict_gams = {        
+    dbdict_gams = {
         'Sji': 'optstoic_v3_Sij.txt',
         'reaction': 'optstoic_v3_reactions.txt',
         'metabolite': 'optstoic_v3_metabolites.txt',
@@ -503,7 +536,7 @@ def load_base_reaction_db(
 
     DB = BaseReactionDatabase(
         data_filepath=DATA_DIR,
-        dbdict_json=dbdict_json, 
+        dbdict_json=dbdict_json,
         dbdict_gams=dbdict_gams)
 
     DB.load()
@@ -540,7 +573,7 @@ def load_base_reaction_db(
 
 def load_db_v3(
     reduce_model_size=True,
-    user_defined_export_rxns_Sji = {
+    user_defined_export_rxns_Sji={
         'EX_glc': {'C00031': -1.0},
         'EX_nad': {'C00003': -1.0},
         'EX_adp': {'C00008': -1.0},
@@ -552,16 +585,16 @@ def load_db_v3(
         'EX_hplus': {'C00080': -1.0},
         'EX_nadp': {'C00006': -1.0},
         'EX_nadph': {'C00005': -1.0}
-        },
+    },
     logger=None
-    ):
+):
     """Load OptStoic database v3
-    
+
     Returns:
         TYPE: Description
-    
+
     Args:
-        reduce_model_size (bool, optional): True if you want to reduce the size of the 
+        reduce_model_size (bool, optional): True if you want to reduce the size of the
             model by removing blocked reactions from the S matrix.
         user_defined_export_rxns_Sji (dict, optional): The list of export reactions that
             need to be added to the model for metabolite exchange (i.e., any metabolite
@@ -570,16 +603,17 @@ def load_db_v3(
     if logger is None:
         logger = create_logger(name="optstoicpy.core.database.load_db_v3")
 
-    # get reactions that are manually curated to be excluded for glycolysis study
+    # get reactions that are manually curated to be excluded for glycolysis
+    # study
     excluded_reactions = load_custom_reactions_to_be_excluded()
-        
-    dbdict_json = {        
+
+    dbdict_json = {
         'Sji': 'optstoic_v3_Sji_dict.json',
         'Nint': 'optstoic_v3_Nint.json',
         'reactiontype': 'optstoic_v3_reactiontype.json'
     }
 
-    dbdict_gams = {        
+    dbdict_gams = {
         'Sji': 'optstoic_v3_Sij.txt',
         'reaction': 'optstoic_v3_reactions.txt',
         'metabolite': 'optstoic_v3_metabolites.txt',
@@ -598,9 +632,9 @@ def load_db_v3(
         blocked_rxns = None
 
     DB = Database(
-        description='v3', 
+        description='v3',
         data_filepath=DATA_DIR,
-        dbdict_json=dbdict_json, 
+        dbdict_json=dbdict_json,
         dbdict_gams=dbdict_gams,
         blocked_rxns=blocked_rxns,
         excluded_reactions=excluded_reactions,

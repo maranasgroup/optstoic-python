@@ -67,7 +67,7 @@ default_params = {
 }
 
 
-### Color configurations for drawpathway.py
+# Color configurations for drawpathway.py
 color_configs = {}
 color_configs['light'] = dict(COFACTOR_SHAPE="ellipse",  # "diamond"
                               OTHER_COFACTOR_COLOR='#B6B6B6',

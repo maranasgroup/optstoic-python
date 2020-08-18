@@ -18,6 +18,7 @@ REACTION_FONT_SIZE = '20'
 
 # ########################################
 
+
 def load_global_styles(colorConfig):
     """
     Create a global styles dictionary for all Graphviz graph
@@ -72,18 +73,17 @@ def apply_styles(graph, styles):
 
 
 def draw_pathway(
-    Pathway, 
-    imageFileName=None, 
-    imageFormat='png',
-    graphTitle='', 
-    scaleLineWidth=False, 
-    scalingFactor=200.0,
-    cleanup=True, 
-    engine='dot', 
-    darkBackgroundMode=False,
-    width=5,
-    height=5):
-
+        Pathway,
+        imageFileName=None,
+        imageFormat='png',
+        graphTitle='',
+        scaleLineWidth=False,
+        scalingFactor=200.0,
+        cleanup=True,
+        engine='dot',
+        darkBackgroundMode=False,
+        width=5,
+        height=5):
     """
     Draw a digraph for a Pathway objects and render it as
     the given imageFormat using Graphviz.
@@ -124,7 +124,7 @@ def draw_pathway(
     g = gv.Digraph('G', format=imageFormat, engine=engine)
 
     # g.graph_attr['ratio']='fill'
-    g.graph_attr['size'] = "{},{}".format(width,height)
+    g.graph_attr['size'] = "{},{}".format(width, height)
     if imageFormat == 'png':
         g.graph_attr['dpi'] = '300'
     elif imageFormat == 'svg':
