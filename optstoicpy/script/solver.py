@@ -5,7 +5,7 @@ from optstoicpy.script.utils import create_logger
 ORDERED_SOLVERS = ['SCIP_CMD', 'GUROBI', 'GUROBI_CMD', 'CPLEX_CMD', 'GLPK_CMD']
 
 SCIP_CMD_PARAMETERS = [
-    "limits/gap = 1e-6", 
+    "limits/gap = 1e-6",
     "limits/absgap = 1e-6",
     "lp/threads = 6",
     "limits/time = 600"]
@@ -13,15 +13,15 @@ SCIP_CMD_PARAMETERS = [
 GUROBI_CMD_OPTIONS = [
     ('Threads', 2),
     ('TimeLimit', 1800),
-    ('MIPGapAbs', 1e-6), 
-    ('MIPGap', 1e-6), 
+    ('MIPGapAbs', 1e-6),
+    ('MIPGap', 1e-6),
     ('CliqueCuts', 2)]
 
 CPLEX_CMD_OPTIONS = [
     'mip tolerances mipgap 1e-6',
     'mip tolerances absmipgap 1e-6']
 
-GLPK_CMD_OPTIONS  = ['--clique', '--pcost', '--gomory', '--mipgap', '1e-6']
+GLPK_CMD_OPTIONS = ['--clique', '--pcost', '--gomory', '--mipgap', '1e-6']
 
 SOLVER_KWARGS = {
     'SCIP_CMD': dict(
@@ -56,11 +56,12 @@ SOLVER_KWARGS = {
         msg=1,
         mip=1,
         options=GLPK_CMD_OPTIONS)
-    }
+}
+
 
 def load_pulp_solver(
-    solver_names=ORDERED_SOLVERS,
-    logger=None):
+        solver_names=ORDERED_SOLVERS,
+        logger=None):
     """Load a pulp solver based on what is available.
 
     Args:
@@ -86,20 +87,22 @@ def load_pulp_solver(
         pulp_solver = pulp.get_solver(**kwargs)
 
         if pulp_solver.available():
-            logger.warning("Pulp solver set to %s."%solver_name)
+            logger.warning("Pulp solver set to %s." % solver_name)
 
-            if hasattr(pulp_solver,'tmpDir'):
+            if hasattr(pulp_solver, 'tmpDir'):
                 pulp_solver.tmpDir = './'
-            
+
             if solver_name == 'SCIP_CMD':
-                scip_parameter_filepath= create_scip_parameter_file(
+                scip_parameter_filepath = create_scip_parameter_file(
                     parameters=SCIP_CMD_PARAMETERS, filepath=pulp_solver.tmpDir)
-                pulp_solver.options = ["-s", "{}".format(scip_parameter_filepath)]
+                pulp_solver.options = [
+                    "-s", "{}".format(scip_parameter_filepath)]
 
             if solver_name == 'GLPK_CMD':
-                logger.warning("GLPK takes a significantly longer time to solve "
-                                "OptStoic. Please be patient.")
-                                
+                logger.warning(
+                    "GLPK takes a significantly longer time to solve "
+                    "OptStoic. Please be patient.")
+
             return pulp_solver
 
     logger.warning("No solver is available!")
@@ -115,7 +118,7 @@ def create_scip_parameter_file(parameters=SCIP_CMD_PARAMETERS, filepath="./"):
 
     Returns:
         str: The path to the full scip parameters.
-    """    
+    """
     fullfilepath = os.path.join(filepath, "scip_parameters.set")
     with open(fullfilepath, "w+") as parameter_file:
         parameter_file.write("\n".join(parameters))

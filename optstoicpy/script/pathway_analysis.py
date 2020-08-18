@@ -2,74 +2,87 @@
 Compare and combine pathways from different parallel simulation (e.g. python and gams).
 """
 from __future__ import print_function
+import os
+import copy
+import pickle as pickle
+import matplotlib.pyplot as plt
+from matplotlib import cm
+import numpy as np
+from optstoicpy.core.drawpathway import *
+from optstoicpy.core.pathway import Pathway, generate_kegg_model
+import matplotlib
+from builtins import range
+from builtins import zip
 from future import standard_library
 standard_library.install_aliases()
-from builtins import zip
-from builtins import range
-import matplotlib
-#matplotlib.use('SVG')
+# matplotlib.use('SVG')
 matplotlib.use('Agg')
-from optstoicpy.core.pathway import Pathway, generate_kegg_model
-from optstoicpy.core.drawpathway import *
-import numpy as np
-from matplotlib import cm
-import matplotlib.pyplot as plt
-import pickle as pickle
-import copy, os
+
 
 def get_pathway_identity_matrix(pathwayObjList, symmetry=True):
     """
     Matrix[i][j] = 1 if pathway i and pathway j are identical, otherwise 0.
-    
+
     Arguments:
         pathwayObjList (TYPE): A list of pathway objects
         symmetry (bool, optional): If True, return a full matrix. If False, return only upper triangular matrix.
-    
+
     Returns:
         TYPE: Description
-    
+
     """
     nr = len(pathwayObjList)
 
     # calculate identity score between the two different set of pathways
     similarity_mat = np.identity(nr)
     for i in range(nr):
-        for j in range(i+1, nr):
-            similarity_mat[i][j] = pathwayObjList[i].is_same_pathway_with(pathwayObjList[j])
+        for j in range(i + 1, nr):
+            similarity_mat[i][j] = pathwayObjList[i].is_same_pathway_with(
+                pathwayObjList[j])
 
     # Fill the lower triangular matrix with the same value
     if symmetry:
-        similarity_mat = similarity_mat + similarity_mat.T - np.diag(similarity_mat.diagonal())
+        similarity_mat = similarity_mat + similarity_mat.T - \
+            np.diag(similarity_mat.diagonal())
 
     return similarity_mat
 
-def get_unique_pathways_from_list(pathwayObjList, update_unique_id=True, sort_by_total_flux=False, debug=False):
+
+def get_unique_pathways_from_list(
+        pathwayObjList,
+        update_unique_id=True,
+        sort_by_total_flux=False,
+        debug=False):
     """
     return a set of unique pathways (obj) from a list of Pathway objects
-    
+
     Arguments:
         pathwayObjList (TYPE): list of pathway objects
         update_unique_id (bool, optional): change the ID to unique id (default True)
         sort_by_total_flux (bool, optional): sort the unique pathways by total flux (default False)
         debug (bool, optional): output a data index to unique pathway id mapping dictionary (default False)
-    
+
         Note: Currently, "debug=True" does not work with "sort_by_total_flux=True"
-    
+
     Returns:
         TYPE: Description
     """
 
-    similarity_mat = get_pathway_identity_matrix(pathwayObjList, symmetry=False)
+    similarity_mat = get_pathway_identity_matrix(
+        pathwayObjList, symmetry=False)
     #fig = plot_single_similarity_matrix(similarity_mat, nATP=1)
-    #fig.savefig('before_sim.png')
+    # fig.savefig('before_sim.png')
     score = np.sum(similarity_mat, axis=0)
 
-    unique_index = np.where(score==1)[0]
+    unique_index = np.where(score == 1)[0]
 
     all_unique_pathways = list(np.array(pathwayObjList)[unique_index])
 
     if sort_by_total_flux:
-        newlist = sorted(all_unique_pathways, key=lambda p: p.total_flux_no_exchange, reverse=False)
+        newlist = sorted(
+            all_unique_pathways,
+            key=lambda p: p.total_flux_no_exchange,
+            reverse=False)
         all_unique_pathways = newlist
 
     if update_unique_id:
@@ -79,22 +92,24 @@ def get_unique_pathways_from_list(pathwayObjList, update_unique_id=True, sort_by
     print(len(all_unique_pathways))
     #unique_pathway_similarity_mat = get_pathway_identity_matrix(all_unique_pathways, symmetry=True)
     #fig = plot_single_similarity_matrix(unique_pathway_similarity_mat, nATP=1)
-    #fig.savefig('after_sim.png')
+    # fig.savefig('after_sim.png')
 
-    #---debug function: to check which gams code generate feasible result
+    # ---debug function: to check which gams code generate feasible result
     if debug:
 
-        map_unique_index_to_pathid  = dict(list(zip(unique_index, list(range(1,len(unique_index)+1)))))
+        map_unique_index_to_pathid = dict(
+            list(zip(unique_index, list(range(1, len(unique_index) + 1)))))
         data_to_id_map = copy.deepcopy(map_unique_index_to_pathid)
 
-        for ind in np.where(score>1)[0]:
-            #get the first occurence of the pathway
-            first_occur = np.argmax(similarity_mat[:,ind])
-            #get the final id of that
+        for ind in np.where(score > 1)[0]:
+            # get the first occurence of the pathway
+            first_occur = np.argmax(similarity_mat[:, ind])
+            # get the final id of that
             data_to_id_map[ind] = map_unique_index_to_pathid[first_occur]
         return all_unique_pathways, data_to_id_map
     else:
         return all_unique_pathways
+
 
 def find_identical_pathways_and_get_unique_pathways(pres, gres):
     """
@@ -106,23 +121,23 @@ def find_identical_pathways_and_get_unique_pathways(pres, gres):
         gres -- pathway object files generated from gams
 
     """
-    #gres[0].is_same_pathway_with(gres[1])
+    # gres[0].is_same_pathway_with(gres[1])
     lpy = len(pres)
     lgams = len(gres)
 
-    #calculate identity score between the two different set of pathways
+    # calculate identity score between the two different set of pathways
     similarity_mat = np.zeros((lpy, lgams))
     for i, p1 in enumerate(pres):
         for j, p2 in enumerate(gres):
             similarity_mat[i][j] = p1.is_same_pathway_with(p2)
 
-    #set of identical pathways (intersection between two sets)
+    # set of identical pathways (intersection between two sets)
     pmatch, gmatch = np.where(similarity_mat == 1)
 
     assert len(pmatch) == len(set(pmatch))
 
-    #set of unique pathways
-    unique_pathways = [pres[i] for i in range(0,len(pres)) if i not in pmatch]
+    # set of unique pathways
+    unique_pathways = [pres[i] for i in range(0, len(pres)) if i not in pmatch]
     all_unique_pathways = copy.deepcopy(gres)
 
     for i, p in enumerate(unique_pathways, start=1):
@@ -132,6 +147,7 @@ def find_identical_pathways_and_get_unique_pathways(pres, gres):
     print(len(all_unique_pathways))
 
     return similarity_mat, all_unique_pathways
+
 
 def calculate_jaccard_score_between_pathways(pathway_set):
     """
@@ -143,23 +159,37 @@ def calculate_jaccard_score_between_pathways(pathway_set):
     mat = np.identity(nr)
 
     for i in range(nr):
-        for j in range(i+1, nr):
-            mat[i][j] = pathway_set[i].get_pathway_similarity_index(pathway_set[j])
+        for j in range(i + 1, nr):
+            mat[i][j] = pathway_set[i].get_pathway_similarity_index(
+                pathway_set[j])
             mat[j][i] = mat[i][j]
     return mat
+
 
 def make_dir_if_not_exist(dirpath):
     if not os.path.isdir(dirpath):
         os.makedirs(dirpath)
     return 1
 
+
 def plot_similarity_matrix(similarity_mat, similarity_mat_all_pathways):
 
     xmax1, ymin1 = np.shape(similarity_mat)
 
-    fig = plt.figure(figsize = (18,8))
+    fig = plt.figure(figsize=(18, 8))
     ax1 = plt.subplot2grid((1, 2), (0, 0))
-    im1 = ax1.imshow(similarity_mat, interpolation='none', extent=[0, xmax1, ymin1, 0], vmin=0, vmax=1, aspect='auto', cmap=cm.coolwarm)
+    im1 = ax1.imshow(
+        similarity_mat,
+        interpolation='none',
+        extent=[
+            0,
+            xmax1,
+            ymin1,
+            0],
+        vmin=0,
+        vmax=1,
+        aspect='auto',
+        cmap=cm.coolwarm)
     cbar = plt.colorbar(im1)
     cbar.set_label('Jaccard Index')
     ax1.xaxis.set_ticks_position('top')
@@ -168,14 +198,28 @@ def plot_similarity_matrix(similarity_mat, similarity_mat_all_pathways):
     ax1.set_xlabel('Python pathway #')
     ax1.set_ylabel('GAMS pathway #')
 
-    plt.text(0.5, 1.08, 'Python vs gams', horizontalalignment='center', fontsize=12, transform = ax1.transAxes)
-    #ax1.set_title()
+    plt.text(
+        0.5,
+        1.08,
+        'Python vs gams',
+        horizontalalignment='center',
+        fontsize=12,
+        transform=ax1.transAxes)
+    # ax1.set_title()
     ax1.grid(True)
     #fig.savefig('compare_python_gams_1ATP_pathways', transparent=True)
 
     xmax2, ymin2 = np.shape(similarity_mat_all_pathways)
     ax2 = plt.subplot2grid((1, 2), (0, 1))
-    im2 = ax2.imshow(similarity_mat_all_pathways, interpolation='none', extent=[0, xmax2, ymin2, 0], aspect='auto')
+    im2 = ax2.imshow(
+        similarity_mat_all_pathways,
+        interpolation='none',
+        extent=[
+            0,
+            xmax2,
+            ymin2,
+            0],
+        aspect='auto')
     cbar = plt.colorbar(im2)
     cbar.set_label('Jaccard Index')
     ax2.xaxis.set_ticks_position('top')
@@ -183,16 +227,30 @@ def plot_similarity_matrix(similarity_mat, similarity_mat_all_pathways):
     ax2.set_xlabel('Pathway #')
     ax2.set_ylabel('Pathway #')
     #ax2.set_title('All unique 1ATP pathways')
-    plt.text(0.5, 1.08, 'Similarity index for all unique pathways',
-            horizontalalignment='center', fontsize=12, transform = ax2.transAxes)
+    plt.text(
+        0.5,
+        1.08,
+        'Similarity index for all unique pathways',
+        horizontalalignment='center',
+        fontsize=12,
+        transform=ax2.transAxes)
 
     return fig
+
 
 def plot_single_similarity_matrix(similarity_mat_all_pathways, nATP=1):
 
-    fig, ax2 = plt.subplots(figsize=(10,10))
+    fig, ax2 = plt.subplots(figsize=(10, 10))
     xmax2, ymin2 = np.shape(similarity_mat_all_pathways)
-    im2 = ax2.imshow(similarity_mat_all_pathways, interpolation='none', extent=[0, xmax2, ymin2, 0], aspect='auto')
+    im2 = ax2.imshow(
+        similarity_mat_all_pathways,
+        interpolation='none',
+        extent=[
+            0,
+            xmax2,
+            ymin2,
+            0],
+        aspect='auto')
     cbar = plt.colorbar(im2)
     cbar.set_label('Jaccard Index')
     ax2.xaxis.set_ticks_position('top')
@@ -200,10 +258,11 @@ def plot_single_similarity_matrix(similarity_mat_all_pathways, nATP=1):
     ax2.set_xlabel('Pathway #')
     ax2.set_ylabel('Pathway #')
     #ax2.set_title('All unique 1ATP pathways')
-    plt.text(0.5, 1.08, 'Similarity index for all unique {0} ATP pathways'.format(nATP),
-            horizontalalignment='center', fontsize=12, transform = ax2.transAxes)
+    plt.text(0.5, 1.08, 'Similarity index for all unique {0} ATP pathways'.format(
+        nATP), horizontalalignment='center', fontsize=12, transform=ax2.transAxes)
 
     return fig
+
 
 def draw_all_pathways(pathway_set, outputFilePath, cutoff=0):
     """Draw all the pathway given a list of pathway objects
@@ -216,15 +275,21 @@ def draw_all_pathways(pathway_set, outputFilePath, cutoff=0):
     for p in pathway_set:
         if p.id > cutoff:
             graph_title = "Final_{0}_P{1}".format(p.name, p.id)
-            draw_pathway(p, os.path.join(outputFilePath, '/pathway_{0:03d}'.format(p.id)),
-                        imageFormat='png', graphTitle=graph_title, cleanup=True, darkBackgroundMode=False)
+            draw_pathway(p,
+                         os.path.join(outputFilePath,
+                                      '/pathway_{0:03d}'.format(p.id)),
+                         imageFormat='png',
+                         graphTitle=graph_title,
+                         cleanup=True,
+                         darkBackgroundMode=False)
     print("Done!")
 
     return 1
 
+
 def draw_selected_pathways(pathway_set, outputFilePath, selected_ids=[],
-                            file_prefix='selected_pathway_',
-                            imageFormat='png', darkBackgroundMode=False):
+                           file_prefix='selected_pathway_',
+                           imageFormat='png', darkBackgroundMode=False):
     """Draw all the pathway given a list of pathway objects
     Arguments:
     pathway_set  --  a list of pathway objects
@@ -235,11 +300,21 @@ def draw_selected_pathways(pathway_set, outputFilePath, selected_ids=[],
     for p in pathway_set:
         if p.id in selected_ids:
             graph_title = "Final_{0}_P{1}".format(p.name, p.id)
-            draw_pathway(p, os.path.join(outputFilePath, file_prefix+'{0:03d}'.format(p.id)),
-                        imageFormat=imageFormat, graphTitle=graph_title, cleanup=True, darkBackgroundMode=darkBackgroundMode)
+            draw_pathway(
+                p,
+                os.path.join(
+                    outputFilePath,
+                    file_prefix +
+                    '{0:03d}'.format(
+                        p.id)),
+                imageFormat=imageFormat,
+                graphTitle=graph_title,
+                cleanup=True,
+                darkBackgroundMode=darkBackgroundMode)
     print("Done!")
 
     return 1
+
 
 def extract_pathway_set(pathway_set, selected_ids=[]):
     new_set = []
@@ -247,6 +322,7 @@ def extract_pathway_set(pathway_set, selected_ids=[]):
         if p.id in selected_ids:
             new_set.append(p)
     return new_set
+
 
 def combine_multiple_pathways(pathway_set):
 
@@ -265,20 +341,24 @@ def combine_multiple_pathways(pathway_set):
             if rxn.flux > 0:
                 combined_reactions[rxn.rid]['count_f'] += 1
                 if combined_reactions[rxn.rid]['example_f'] is None:
-                    #normalize the flux
-                    combined_reactions[rxn.rid]['example_f'] = copy.deepcopy(rxn)
+                    # normalize the flux
+                    combined_reactions[rxn.rid]['example_f'] = copy.deepcopy(
+                        rxn)
             else:
                 combined_reactions[rxn.rid]['count_r'] += 1
                 if combined_reactions[rxn.rid]['example_r'] is None:
-                    combined_reactions[rxn.rid]['example_r'] = copy.deepcopy(rxn)
+                    combined_reactions[rxn.rid]['example_r'] = copy.deepcopy(
+                        rxn)
 
     return combined_reactions
 
+
 def draw_combined_pathway(combined_reactions, fileName):
-    reactionObjList= []
+    reactionObjList = []
     for r, v in combined_reactions.items():
         if v['count_f'] > 0:
-            #Create a reaction object with number of reaction occurence in all pathways as flux
+            # Create a reaction object with number of reaction occurence in all
+            # pathways as flux
             v['example_f'].flux = v['count_f']
             reactionObjList.append(v['example_f'])
 
@@ -288,9 +368,16 @@ def draw_combined_pathway(combined_reactions, fileName):
 
     p = Pathway(id='', name='Combined_pathway', reactions=reactionObjList)
 
-    draw_pathway(p, fileName, imageFormat='png', graphTitle=fileName, scaleLineWidth=True,
-                    scalingFactor=10.0, cleanup=True, engine='dot')
-    #Layout engines: circo dot fdp neato nop1 nop2 osage patchwork sfdp twopi
+    draw_pathway(
+        p,
+        fileName,
+        imageFormat='png',
+        graphTitle=fileName,
+        scaleLineWidth=True,
+        scalingFactor=10.0,
+        cleanup=True,
+        engine='dot')
+    # Layout engines: circo dot fdp neato nop1 nop2 osage patchwork sfdp twopi
     return 1
 
 
