@@ -69,7 +69,7 @@ class TestOptStoic(unittest.TestCase):
         #test.max_iteration = test.max_iteration + 1
         #lp_prob, pathways = test.solve(outputfile='test_optstoic.txt', exclude_existing_solution=True)
 
-        self.assertEqual(pathways[1]['modelstat'], 'Optimal')
+        self.assertEqual(pathways[1].note['modelstat'], 'Optimal')
 
     def test_general_optstoic(self):
         """Test optstoic analysis with standard setup
