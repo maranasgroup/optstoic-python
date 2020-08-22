@@ -163,4 +163,4 @@ class TestOptStoic(unittest.TestCase):
         lp_prob, pathways = model.solve(
             outputfile='test_optstoic_general.txt')
 
-        self.assertEqual(pathways[1]['modelstat'], 'Optimal')
+        self.assertEqual(pathways[1].note['modelstat'], 'Optimal')
